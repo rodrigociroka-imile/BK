@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCI - Sistema de Controle de Insumo - Entradas e Saídas</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- jsPDF + AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: "Segoe UI", sans-serif;
+      }
+      .navbar {
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+      }
+      .card {
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+      .img-thumbnail {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+      }
+      table {
+        font-size: 0.95rem;
+      }
+      #qrContainer {
+        margin: 0 auto 20px;
+      }
+      #produtoNomeQr {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #0d6efd;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav id="navbar" class="navbar navbar-dark d-none">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1 fw-bold"
+          ><i class="fas fa-boxes"></i> Sistema de Controle de Estoque</span
+        >
+        <div>
+          <span class="text-white me-3">
+            Bem-vindo, <strong id="userName">Usuário</strong>
+          </span>
+
+          <button onclick="logout()" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- LOGIN (mantido igual) -->
+    <div
+      id="loginScreen"
+      class="container d-flex align-items-center justify-content-center min-vh-100"
+    >
+      <div class="card shadow-lg" style="width: 100%; max-width: 420px">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <i class="fa-solid fa-chart-simple fa-4x text-info mb-3"></i>
+            <h2 class="fw-bold">Visualização Completa</h2>
+            <p class="text-muted">Entradas e Saídas do Sistema</p>
+          </div>
+          <form id="loginForm">
+            <div class="mb-3">
+              <label class="form-label">Login</label>
+              <input
+                type="text"
+                id="loginInput"
+                class="form-control form-control-lg"
+                placeholder="Informe o Login"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label class="form-label">Senha</label>
+              <input
+                type="password"
+                id="senhaInput"
+                class="form-control form-control-lg"
+                placeholder="Informe a senha"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-info btn-lg w-100">
+              Entrar no Sistema
+            </button>
+          </form>
+          <div class="text-center mt-4 text-muted small">
+            <strong>Teste:</strong> login <code>visualizacao</code> • senha
+            <code>vis123</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA PRINCIPAL -->
+    <div id="mainScreen" class="d-none container py-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-info mb-0">VISUALIZAÇÃO DAS INFORMAÇÕES</h2>
+        <div>
+          <button class="btn btn-primary me-2" onclick="gerarPDF('entradas')">
+            <i class="fas fa-file-pdf me-2"></i> PDF Entradas
+          </button>
+          <button class="btn btn-primary" onclick="gerarPDF('saidas')">
+            <i class="fas fa-file-pdf me-2"></i> PDF Saídas
+          </button>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        <li class="nav-item">
+          <a
+            class="nav-link active"
+            id="tabEntradas"
+            data-bs-toggle="tab"
+            href="#entradas"
+            >Entradas Recebimento</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="tabSaidas" data-bs-toggle="tab" href="#saidas"
+            >Saídas Expedição</a
+          >
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <!-- TAB ENTRADAS -->
+        <div class="tab-pane fade show active" id="entradas">
+          <div class="card">
+            <div class="card-body">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Cód. Produto</th>
+                    <th>Nome</th>
+                    <th>Empresa</th>
+                    <th>Qt</th>
+                    <th>Imagem</th>
+                    <th>Data/Hora</th>
+                    <th>PO</th>
+                    <th>RI</th>
+                    <th>PY</th>
+                    <th>Nota</th>
+                    <th>QR</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaEntradas"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB SAÍDAS  -->
+        <div class="tab-pane fade" id="saidas">
+          <div class="card">
+            <div class="card-body">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Qt</th>
+                    <th>Imagem</th>
+                    <th>Data/Hora</th>
+                    <th>Local</th>
+                    <th>OBS</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaSaidas"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL QR CODE  -->
+    <div class="modal fade" id="qrModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">QR Code da Entrada</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body text-center">
+            <div id="qrContainer"></div>
+            <div id="produtoNomeQr" class="mt-3"></div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL RELATÓRIO (mantido, mas pode ser removido se não usar mais) -->
+    <div
+      class="modal fade"
+      id="relatorioModal"
+      tabindex="-1"
+      aria-labelledby="relatorioModalLabel"
+    >
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="relatorioModalLabel">
+              Relatório de Movimentações
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <!-- ... conteúdo do relatório  ... -->
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="acesso.js"></script>
+    <script type="module">
+      import { DB } from './bd.js';
+
+      access.initAccess({
+        mainScreenId: "mainScreen",
+        navbarId: "navbar",
+        userNameId: "userName",
+        userDisplayName: "Mercia",
+        validLogin: "visualizacao",
+        validSenha: "vis123",
+        onLogin: renderizarTabelas,
+      });
+
+      async function renderizarTabelas() {
+        // ENTRADAS
+        let entradas = await DB.getEntradas();
+        const tbodyE = document.getElementById("tabelaEntradas");
+        tbodyE.innerHTML = "";
+        entradas.reverse().forEach((ent) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                    <td><strong>${ent.id}</strong></td>
+                    <td>${ent.codigo || "-"}</td>
+                    <td>${ent.nome}</td>
+                    <td>${ent.empresa || "-"}</td>
+                    <td>${ent.quantidade}</td>
+                    <td><img src="${ent.imagem}" class="img-thumbnail"></td>
+                    <td>${ent.dataHora}</td>
+                    <td>${ent.po || "-"}</td>
+                    <td>${ent.ri || "-"}</td>
+                    <td>${ent.py || "-"}</td>
+                    <td>${ent.nota || "-"}</td>
+                    <td>
+                        <button onclick="mostrarQR('${ent.qrData}', '${ent.nome}')" class="btn btn-sm btn-primary">
+                            <i class="fas fa-qrcode"></i> Ver QR
+                        </button>
+                        <button onclick="editarEntrada('${ent.id}')" class="btn btn-sm btn-warning ms-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deletarEntrada('${ent.id}')" class="btn btn-sm btn-danger ms-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+          tbodyE.appendChild(tr);
+        });
+
+        // SAÍDAS
+        let saidas = await DB.getSaidas();
+        const tbodyS = document.getElementById("tabelaSaidas");
+        tbodyS.innerHTML = "";
+        saidas.reverse().forEach((s) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                    <td><strong>${s.id}</strong></td>
+                    <td>${s.nome}</td>
+                    <td>${s.quantidade}</td>
+                    <td><img src="${s.imagem}" class="img-thumbnail"></td>
+                    <td>${s.dataHora}</td>
+                    <td><span class="badge bg-secondary">${s.local || "-"}</span></td>
+                    <td>${s.obs || "-"}</td>
+                    <td>
+                        <button onclick="editarSaida('${s.id}')" class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deletarSaida('${s.id}')" class="btn btn-sm btn-danger ms-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+          tbodyS.appendChild(tr);
+        });
+      }
+
+      async function deletarEntrada(id) {
+        if (!id) return;
+        if (!confirm('Deseja realmente excluir esta entrada?')) return;
+        await DB.deleteEntrada(id);
+        alert('Entrada excluída com sucesso.');
+        await renderizarTabelas();
+      }
+
+      async function deletarSaida(id) {
+        if (!id) return;
+        if (!confirm('Deseja realmente excluir esta saída?')) return;
+        await DB.deleteSaida(id);
+        alert('Saída excluída com sucesso.');
+        await renderizarTabelas();
+      }
+
+      async function editarEntrada(id) {
+        const entradas = await DB.getEntradas();
+        const item = entradas.find((e) => e.id === id);
+        if (!item) {
+          alert('Entrada não encontrada.');
+          return;
+        }
+
+        const novoNome = prompt('Nome do produto:', item.nome) || item.nome;
+        const novaEmpresa = prompt('Empresa:', item.empresa || '') || item.empresa;
+        const novaQuantidade = prompt('Quantidade:', item.quantidade) || item.quantidade;
+
+        await DB.updateEntrada(id, {
+          nome: novoNome,
+          empresa: novaEmpresa,
+          quantidade: Number(novaQuantidade) || item.quantidade,
+        });
+
+        alert('Entrada atualizada.');
+        await renderizarTabelas();
+      }
+
+      async function editarSaida(id) {
+        const saidas = await DB.getSaidas();
+        const item = saidas.find((s) => s.id === id);
+        if (!item) {
+          alert('Saída não encontrada.');
+          return;
+        }
+
+        const novoLocal = prompt('Local de expedição:', item.local || '') || item.local;
+        const novaObs = prompt('Observação:', item.obs || '') || item.obs;
+        const novaQuantidade = prompt('Quantidade:', item.quantidade) || item.quantidade;
+
+        await DB.updateSaida(id, {
+          local: novoLocal,
+          obs: novaObs,
+          quantidade: Number(novaQuantidade) || item.quantidade,
+        });
+
+        alert('Saída atualizada.');
+        await renderizarTabelas();
+      }
+
+      function mostrarQR(qrData, nomeProduto) {
+        const container = document.getElementById("qrContainer");
+        container.innerHTML = "";
+        new QRCode(container, {
+          text: qrData,
+          width: 280,
+          height: 280,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+        document.getElementById("produtoNomeQr").textContent =
+          nomeProduto || "Produto sem nome";
+        new bootstrap.Modal(document.getElementById("qrModal")).show();
+      }
+
+      // ───────────────────────────────────────────────
+      //           GERAÇÃO DO PDF
+      // ───────────────────────────────────────────────
+      async function gerarPDF(tipo) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.text(
+          tipo === "entradas"
+            ? "RELATÓRIO DE ENTRADAS / RECEBIMENTO"
+            : "RELATÓRIO DE SAÍDAS / EXPEDIÇÃO",
+          20,
+          20,
+        );
+
+        doc.setFontSize(10);
+        doc.text("Gerado em: " + new Date().toLocaleString("pt-BR"), 20, 28);
+
+        let dados = [];
+        let columns = [];
+
+        if (tipo === "entradas") {
+          columns = [
+            "Código",
+            "Produto",
+            "Empresa",
+            "Quantidade",
+            "Data Chegada",
+            "PO",
+            "RI",
+            "PY",
+            "Nº Nota",
+          ];
+
+          const entradas = await DB.getEntradas();
+          dados = entradas.map((item) => [
+            item.codigo || "-",
+            item.nome,
+            item.empresa || "-",
+            item.quantidade,
+            item.dataHora,
+            item.po || "-",
+            item.ri || "-",
+            item.py || "-",
+            item.nota || "-",
+          ]);
+
+          // Adiciona tabela principal
+          doc.autoTable({
+            startY: 40,
+            head: [columns],
+            body: dados,
+            theme: "grid",
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [13, 110, 253] },
+            margin: { top: 40, left: 15, right: 15 },
+          });
+        } else {
+          // SAÍDAS - sem QR Code
+          columns = [
+            "Produto",
+            "Quantidade",
+            "Data/Hora",
+            "Local",
+            "Observação",
+          ];
+
+          const saidas = await DB.getSaidas();
+          dados = saidas.map((item) => [
+            item.nome,
+            item.quantidade,
+            item.dataHora,
+            item.local || "-",
+            item.obs || "-",
+          ]);
+
+          doc.autoTable({
+            startY: 40,
+            head: [columns],
+            body: dados,
+            theme: "grid",
+            styles: { fontSize: 10, cellPadding: 4 },
+            headStyles: { fillColor: [220, 53, 69] },
+            margin: { top: 40, left: 15, right: 15 },
+          });
+        }
+
+        // Salva o PDF
+        doc.save(
+          `relatorio_${tipo}_${new Date().toISOString().slice(0, 10)}.pdf`,
+        );
+      }
+    </script>
+  </body>
+</html>

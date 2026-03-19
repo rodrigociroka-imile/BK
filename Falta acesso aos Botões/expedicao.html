@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCI - Sistema de Controle de Insumo - Saídas</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- html5-qrcode (CDN mais recente em 2025/2026) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: "Segoe UI", sans-serif;
+      }
+      .navbar {
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+      }
+      .card {
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+      .preview-img {
+        max-width: 280px;
+        max-height: 280px;
+        object-fit: cover;
+        border-radius: 12px;
+      }
+      #qr-reader {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      #qr-reader__status {
+        font-size: 1.1rem;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav id="navbar" class="navbar navbar-dark d-none">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1 fw-bold"
+          ><i class="fas fa-boxes"></i> Sistema de Controle de Estoque</span>
+        <div>
+          <span class="text-white me-3">
+            Bem-vindo, <strong id="userName">Usuário</strong>
+          </span>
+
+          <button onclick="logout()" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- LOGIN -->
+    <div
+      id="loginScreen"
+      class="container d-flex align-items-center justify-content-center min-vh-100"
+    >
+      <div class="card shadow-lg" style="width: 100%; max-width: 420px">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <i class="fas fa-truck-loading fa-4x text-danger mb-3"></i>
+            <h2 class="fw-bold">Saída de Produto</h2>
+            <p class="text-muted">
+              Controle de Estoque
+            </p>
+          </div>
+          <form id="loginForm">
+            <div class="mb-3">
+              <label class="form-label">Login</label>
+              <input
+                type="text"
+                id="loginInput"
+                class="form-control form-control-lg"
+                placeholder="Informe o Login"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label class="form-label">Senha</label>
+              <input
+                type="password"
+                id="senhaInput"
+                class="form-control form-control-lg"
+                placeholder="Informe a senha"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-danger btn-lg w-100">
+              Entrar no Sistema
+            </button>
+          </form>
+          <div class="text-center mt-4 text-muted small">
+            <strong>Teste:</strong> login <code>expedicao</code> • senha
+            <code>exp123</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA PRINCIPAL -->
+    <div id="mainScreen" class="d-none container py-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          <div class="card">
+            <div class="card-header bg-danger text-white text-center py-3">
+              <h3 class="mb-0">
+                <i class="fas fa-arrow-up"></i> REGISTRO DE SAÍDA DE PRODUTO
+              </h3>
+            </div>
+            <div class="card-body p-4">
+              <form id="formSaida">
+                <div class="row g-4">
+                  <!-- Botão + Select Produto -->
+                  <div class="col-12">
+                    <label class="form-label"
+                      >Produto (selecione ou escaneie QR Code)</label
+                    >
+                    <div class="input-group input-group-lg">
+                      <select
+                        id="produtoSelect"
+                        class="form-select"
+                        onchange="carregarProduto()"
+                      >
+                        <option value="">Carregando produtos...</option>
+                      </select>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#qrModal"
+                      >
+                        <i class="fas fa-qrcode"></i> Escanear QR
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Nome (auto-preenchido, mas editável) -->
+                  <div class="col-md-8">
+                    <label class="form-label">Nome do Produto</label>
+                    <input
+                      type="text"
+                      id="nomeSaida"
+                      class="form-control"
+                      readonly
+                    />
+                  </div>
+
+                  <!-- Quantidade -->
+                  <div class="col-md-4">
+                    <label class="form-label">Quantidade de Saída (Qt)</label>
+                    <input
+                      type="number"
+                      id="qtSaida"
+                      class="form-control"
+                      min="1"
+                      required
+                    />
+                  </div>
+
+                  <!-- Imagem -->
+                  <div class="col-12">
+                    <label class="form-label">Imagem do Produto</label>
+                    <div class="input-group mb-2">
+                      <input
+                        type="file"
+                        id="fileSaida"
+                        accept="image/*"
+                        class="form-control"
+                      />
+                      <button
+                        type="button"
+                        onclick="openCameraSaida()"
+                        class="btn btn-outline-success"
+                      >
+                        <i class="fas fa-camera"></i> Trocar Foto
+                      </button>
+                    </div>
+                    <div class="text-center">
+                      <img
+                        id="previewSaida"
+                        class="preview-img border shadow-sm"
+                        src="https://via.placeholder.com/280x280/eeeeee/999999?text=Imagem_do_Produto"
+                        alt="Preview"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Data e Hora -->
+                  <div class="col-md-6">
+                    <label class="form-label">Data e Hora da Saída</label>
+                    <input
+                      type="text"
+                      id="dataHoraSaida"
+                      class="form-control"
+                      readonly
+                    />
+                  </div>
+
+                  <!-- Local de Saída -->
+                  <div class="col-md-6">
+                    <label class="form-label">Local de Saída</label>
+                    <select id="localSaida" class="form-select">
+                      <option value="Colaborador">Colaborador</option>
+                      <option value="CDC">CDC</option>
+                      <option value="DC">DC</option>
+                      <option value="RDC">RDC</option>
+                    </select>
+                  </div>
+
+                  <!-- OBS -->
+                  <div class="col-12">
+                    <label class="form-label">Observações</label>
+                    <textarea
+                      id="obs"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Motivo da saída, destino, etc."
+                    ></textarea>
+                  </div>
+
+                  <!-- Registrar -->
+                  <div class="col-12 text-center">
+                    <button type="submit" class="btn btn-danger btn-lg px-5">
+                      <i class="fas fa-truck"></i> Registrar Saída
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL QR CODE -->
+    <div
+      class="modal fade"
+      id="qrModal"
+      tabindex="-1"
+      aria-labelledby="qrModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="qrModalLabel">
+              Escanear QR Code do Produto
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body text-center">
+            <div id="qr-reader"></div>
+            <div id="qr-reader__status" class="mt-3 fw-bold">
+              Aponte a câmera para o QR Code...
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CÂMERA (trocar foto) -->
+    <div class="modal fade" id="cameraModalSaida" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Trocar Foto com Câmera</h5>
+          </div>
+          <div class="modal-body text-center">
+            <video
+              id="videoSaida"
+              autoplay
+              playsinline
+              style="width: 100%; max-height: 420px; background: #000"
+            ></video>
+            <canvas id="canvasSaida" class="d-none"></canvas>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeCameraSaida()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onclick="capturarFotoSaida()"
+              class="btn btn-primary"
+            >
+              Capturar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="acesso.js"></script>
+    <script type="module">
+      import { DB } from './bd.js';
+
+      let currentImageSaida = "";
+      let currentStreamSaida = null;
+      let html5QrCode = null;
+
+      // LOGIN (centralizado em acesso.js)
+      access.initAccess({
+        mainScreenId: "mainScreen",
+        navbarId: "navbar",
+        userNameId: "userName",
+        userDisplayName: "Rodrigo",
+        validLogin: "expedicao",
+        validSenha: "exp123",
+        onLogin: async () => {
+          await carregarProdutos();
+          document.getElementById("dataHoraSaida").value =
+            new Date().toLocaleString("pt-BR");
+        },
+      });
+
+      // CARREGAR PRODUTOS (agora suporta campo qrCode)
+      async function carregarProdutos() {
+        const select = document.getElementById("produtoSelect");
+        const entradas = await DB.getEntradas();
+        select.innerHTML =
+          '<option value="">Selecione ou escaneie o produto...</option>';
+        entradas.forEach((ent) => {
+          const opt = document.createElement("option");
+          opt.value = ent.id;
+          opt.textContent = `${ent.nome} (ID: ${ent.id}) - Qt: ${ent.quantidade}`;
+          // guardamos o qrCode no dataset para facilitar busca posterior
+          if (ent.qrCode) opt.dataset.qrCode = ent.qrCode;
+          select.appendChild(opt);
+        });
+      }
+
+      // CARREGAR DADOS DO PRODUTO (pelo ID)
+      async function carregarProduto() {
+        const id = document.getElementById("produtoSelect").value;
+        if (!id) return;
+        const entradas = await DB.getEntradas();
+        const produto = entradas.find((e) => e.id === id);
+        if (produto) {
+          preencherProduto(produto);
+        }
+      }
+
+      // Função auxiliar para preencher campos
+      function preencherProduto(produto) {
+        document.getElementById("nomeSaida").value = produto.nome;
+        document.getElementById("previewSaida").src =
+          produto.imagem ||
+          "https://via.placeholder.com/280x280/eeeeee/999999?text=Sem+Imagem";
+        currentImageSaida = produto.imagem || "";
+        // Seleciona no dropdown também (caso veio do scan)
+        document.getElementById("produtoSelect").value = produto.id;
+      }
+
+      // Quando escaneia QR Code com sucesso
+      async function onScanSuccess(decodedText, decodedResult) {
+        // decodedText = conteúdo do QR Code
+        const entradas = await DB.getEntradas();
+
+        // Tenta encontrar por qrCode OU por id (caso o QR contenha o ID)
+        const produto = entradas.find(
+          (e) => e.qrCode === decodedText || e.id === decodedText,
+        );
+
+        if (produto) {
+          preencherProduto(produto);
+          alert(`Produto encontrado: ${produto.nome}`);
+          // Fecha modal automaticamente
+          bootstrap.Modal.getInstance(
+            document.getElementById("qrModal"),
+          ).hide();
+          // Para a câmera
+          if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+              html5QrCode.clear();
+            });
+          }
+        } else {
+          alert(
+            "Produto não encontrado para este QR Code.\nConteúdo lido: " +
+              decodedText,
+          );
+        }
+      }
+
+      // Inicializa scanner quando modal abre
+      const qrModalEl = document.getElementById("qrModal");
+      qrModalEl.addEventListener("shown.bs.modal", function () {
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("qr-reader");
+        }
+        const config = { fps: 10, qrbox: { width: 350, height: 250 } };
+        html5QrCode
+          .start(
+            { facingMode: "environment" }, // câmera traseira
+            config,
+            onScanSuccess,
+            (err) => {
+              /* erro silencioso durante scan */
+            },
+          )
+          .catch((err) => {
+            console.error("Erro ao iniciar câmera:", err);
+            document.getElementById("qr-reader__status").innerHTML =
+              "Erro ao acessar câmera. Permita o acesso e tente novamente.";
+          });
+      });
+
+      // Para scanner quando modal fecha
+      qrModalEl.addEventListener("hidden.bs.modal", function () {
+        if (html5QrCode) {
+          html5QrCode
+            .stop()
+            .then(() => {
+              html5QrCode.clear();
+            })
+            .catch((err) => console.log("Erro ao parar câmera", err));
+        }
+      });
+
+      // IMAGEM ARQUIVO
+      document
+        .getElementById("fileSaida")
+        .addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            currentImageSaida = ev.target.result;
+            document.getElementById("previewSaida").src = currentImageSaida;
+          };
+          reader.readAsDataURL(file);
+        });
+
+      // CÂMERA (trocar foto)
+      function openCameraSaida() {
+        const modal = new bootstrap.Modal(
+          document.getElementById("cameraModalSaida"),
+        );
+        modal.show();
+        const video = document.getElementById("videoSaida");
+        navigator.mediaDevices
+          .getUserMedia({ video: { facingMode: "environment" } })
+          .then((stream) => {
+            currentStreamSaida = stream;
+            video.srcObject = stream;
+            video.play();
+          })
+          .catch(() => alert("Erro ao acessar câmera"));
+      }
+
+      function closeCameraSaida() {
+        if (currentStreamSaida) {
+          currentStreamSaida.getTracks().forEach((t) => t.stop());
+        }
+        bootstrap.Modal.getInstance(
+          document.getElementById("cameraModalSaida"),
+        ).hide();
+      }
+
+      function capturarFotoSaida() {
+        const video = document.getElementById("videoSaida");
+        const canvas = document.getElementById("canvasSaida");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        currentImageSaida = canvas.toDataURL("image/png");
+        document.getElementById("previewSaida").src = currentImageSaida;
+        closeCameraSaida();
+      }
+
+      // REGISTRAR SAÍDA
+      document
+        .getElementById("formSaida")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const nome = document.getElementById("nomeSaida").value;
+          const qt = document.getElementById("qtSaida").value;
+          const local = document.getElementById("localSaida").value;
+          const obs = document.getElementById("obs").value;
+
+          if (!nome || !qt || !currentImageSaida) {
+            alert("Selecione um produto, quantidade e imagem!");
+            return;
+          }
+
+          const id = Date.now().toString(36).toUpperCase();
+          const dataHora = new Date().toLocaleString("pt-BR");
+          const saida = {
+            id: id,
+            nome: nome,
+            quantidade: parseInt(qt),
+            imagem: currentImageSaida,
+            dataHora: dataHora,
+            local: local,
+            obs: obs || "Sem observações",
+          };
+
+          await DB.addSaida(saida);
+
+          alert("✅ Saída registrada com sucesso!");
+
+          // Reset form
+          document.getElementById("formSaida").reset();
+          document.getElementById("previewSaida").src =
+            "https://via.placeholder.com/280x280/eeeeee/999999?text=Imagem_do_Produto";
+          currentImageSaida = "";
+          document.getElementById("dataHoraSaida").value =
+            new Date().toLocaleString("pt-BR");
+          document.getElementById("produtoSelect").value = "";
+        });
+    </script>
+  </body>
+</html>
