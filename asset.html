@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCI – Asset</title>
+    <link rel="shortcut icon" href="./img/CDC-ESTOQUE.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+      body {
+        background-color: #f2f6ff;
+        font-family: "Segoe UI", sans-serif;
+      }
+      .navbar {
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+      }
+      .card {
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .preview-img {
+        max-width: 240px;
+        max-height: 240px;
+        object-fit: cover;
+        border-radius: 12px;
+      }
+      .table-fixed {
+        max-height: 360px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <nav id="navbar" class="navbar navbar-dark d-none">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1 fw-bold"><i class="fas fa-boxes"></i> Asset</span>
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-white fw-semibold">
+            Bem-vindo, <strong id="userName">Usuário</strong>
+          </span>
+          <button onclick="logout()" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div id="loginScreen" class="container d-flex align-items-center justify-content-center min-vh-100">
+      <div class="card shadow-lg" style="width: 100%; max-width: 460px">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <i class="fa-solid fa-boxes-stacked fa-4x text-primary mb-3"></i>
+            <h2 class="fw-bold">Asset</h2>
+            <p class="text-muted">Cadastro completo de ativos</p>
+          </div>
+          <form id="loginForm">
+            <div class="mb-3">
+              <label class="form-label">Login</label>
+              <input type="text" id="loginInput" class="form-control form-control-lg" placeholder="Informe o login" required />
+            </div>
+            <div class="mb-4">
+              <label class="form-label">Senha</label>
+              <input type="password" id="senhaInput" class="form-control form-control-lg" placeholder="Informe a senha" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100">Entrar no Sistema</button>
+          </form>
+          <div class="text-center mt-4 text-muted small">
+            <strong>Teste:</strong> login <code>admin</code> • senha <code>123456</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mainScreen" class="d-none container py-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold text-primary mb-1">Cadastro de Asset</h2>
+          <p class="text-muted mb-0">Salve no banco e gere relatório quando quiser.</p>
+        </div>
+        <button class="btn btn-outline-primary" onclick="carregarAssets()">
+          <i class="fas fa-sync-alt me-2"></i> Atualizar
+        </button>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <strong>Cadastro</strong>
+            </div>
+            <div class="card-body">
+              <form id="assetForm">
+                <div class="mb-3">
+                  <label class="form-label">Código</label>
+                  <input id="assetCodigo" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Nome do Produto</label>
+                  <input id="assetNome" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">PY</label>
+                  <input id="assetTipo" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">SN</label>
+                  <input id="assetSN" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Nº do Asset</label>
+                  <input id="assetNumero" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Imagem do Produto</label>
+                  <input type="file" id="assetImagem" class="form-control" accept="image/*" />
+                </div>
+                <div class="text-center mb-3">
+                  <img id="assetPreview" class="preview-img border"
+                       src="https://via.placeholder.com/240x240?text=Sem+Imagem" alt="Preview" />
+                </div>
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-success flex-grow-1" onclick="salvarAsset()">
+                    <i class="fas fa-save me-2"></i> Salvar no Banco
+                  </button>
+                  <button type="button" class="btn btn-primary flex-grow-1" onclick="gerarRelatorioPDF()">
+                    <i class="fas fa-file-pdf me-2"></i> Gerar PDF
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+          
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-secondary text-white">
+              <strong>Assets cadastrados</strong>
+            </div>
+            <div class="card-body p-0">
+              <div class="p-3">
+                <input id="assetSearch" class="form-control" placeholder="Buscar por nome..." />
+              </div>
+              <div class="table-fixed">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Código</th>
+                      <th>Nome</th>
+                      <th>SN</th>
+                      <th>Asset</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="listaAssets"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DETALHES / EDIÇÃO -->
+    <div class="modal fade" id="entradaModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Detalhes da Entrada</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editEntradaForm">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">ID</label>
+                    <input type="text" id="editId" class="form-control" disabled />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Produto</label>
+                    <input type="text" id="editProduto" class="form-control" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Quantidade</label>
+                    <input type="number" id="editQt" class="form-control" required min="1" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Data/Hora</label>
+                    <input type="text" id="editDataHora" class="form-control" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Empresa</label>
+                    <input type="text" id="editEmpresa" class="form-control" />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">PO</label>
+                    <input type="text" id="editPo" class="form-control" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">RI</label>
+                    <input type="text" id="editRi" class="form-control" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">PY</label>
+                    <input type="text" id="editPy" class="form-control" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Nota</label>
+                    <input type="text" id="editNota" class="form-control" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 text-center">
+                <img id="entradaModalImage" class="preview-img border"
+                     src="https://via.placeholder.com/280x280?text=Sem+Imagem" alt="Imagem" />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <button type="button" class="btn btn-primary" id="btnSalvarEdicao" onclick="salvarEdicaoEntrada()">
+              <i class="fas fa-save"></i> Salvar Alterações
+            </button>
+            <button type="button" class="btn btn-outline-success" onclick="gerarPDF('entradas')">
+              <i class="fas fa-file-pdf"></i> Gerar PDF Entradas
+            </button>
+            <button type="button" class="btn btn-outline-danger" onclick="gerarPDF('saidas')">
+              <i class="fas fa-file-pdf"></i> Gerar PDF Saídas
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="acesso.js"></script>
+    <script type="module">
+      import { DB } from './bd.js';
+
+      let currentAssetImage = '';
+      let assetRecords = [];
+      let assetFilter = '';
+      let editingEntradaId = null;
+
+      const modal = new bootstrap.Modal(document.getElementById('entradaModal'));
+
+      document.getElementById('assetSearch').addEventListener('input', (e) => {
+        assetFilter = String(e.target.value || '').trim().toLowerCase();
+        renderAssetTable();
+      });
+
+      document.getElementById('assetImagem').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          currentAssetImage = event.target.result;
+          document.getElementById('assetPreview').src = currentAssetImage;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      async function salvarAsset() {
+        const codigo = document.getElementById('assetCodigo').value.trim();
+        const nome   = document.getElementById('assetNome').value.trim();
+        const tipo   = document.getElementById('assetTipo').value.trim();
+        const sn     = document.getElementById('assetSN').value.trim();
+        const numero = document.getElementById('assetNumero').value.trim();
+
+        if (!codigo || !nome || !tipo || !sn || !numero) {
+          alert('Preencha todos os campos antes de salvar.');
+          return;
+        }
+
+        const asset = {
+          codigo, nome, tipo, sn, numero,
+          imagem: currentAssetImage,
+          criadoEm: new Date().toLocaleString('pt-BR'),
+        };
+
+        await DB.addItem('assets', asset);
+        alert('Asset salvo com sucesso no banco de dados.');
+        document.getElementById('assetForm').reset();
+        document.getElementById('assetPreview').src = 'https://via.placeholder.com/240x240?text=Sem+Imagem';
+        currentAssetImage = '';
+        carregarAssets();
+      }
+
+      async function carregarAssets() {
+        const assets = (await DB.getAll('assets')).reverse();
+        const entradas = (await DB.getEntradas()).reverse().filter((e) => e.ativo);
+
+        assetRecords = [
+          ...entradas.map(e => ({ ...e, sn: e.dataChegada || e.dataHora || '', tipo: e.py || e.empresa || '', _source: 'entrada' })),
+          ...assets.map(a => ({ ...a, _source: 'asset' })),
+        ];
+
+        renderAssetTable();
+      }
+
+      function renderAssetTable() {
+        const tbody = document.getElementById('listaAssets');
+        tbody.innerHTML = '';
+
+        const filtered = assetFilter
+          ? assetRecords.filter(item => String(item.nome || '').toLowerCase().includes(assetFilter))
+          : assetRecords;
+
+        if (!filtered.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum registro encontrado.</td></tr>';
+          return;
+        }
+
+        filtered.slice(0, 16).forEach(item => {
+          const isEntrada = item._source === 'entrada';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${item.codigo || '-'}</td>
+            <td>${item.nome || '-'}</td>
+            <td>${item.sn || '-'}</td>
+            <td>${item.tipo || '-'}</td>
+            <td class="text-end">
+              ${isEntrada ? `
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirEdicaoEntrada('${item.id}')">
+                  <i class="fas fa-edit"></i>
+                </button>
+              ` : ''}
+              <button class="btn btn-sm btn-danger" onclick="deletarRegistro('${item._source}', '${item.id}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function abrirEdicaoEntrada(id) {
+        const entrada = await DB.getEntradaById(id);
+        if (!entrada) return;
+
+        editingEntradaId = id;
+
+        document.getElementById('modalTitle').textContent = 'Editar Entrada';
+        document.getElementById('editId').value       = entrada.id || '';
+        document.getElementById('editProduto').value  = entrada.nome || '';
+        document.getElementById('editQt').value       = entrada.qt || '';
+        document.getElementById('editDataHora').value = entrada.dataHora || entrada.dataChegada || '';
+        document.getElementById('editEmpresa').value  = entrada.empresa || '';
+        document.getElementById('editPo').value       = entrada.po || '';
+        document.getElementById('editRi').value       = entrada.ri || '';
+        document.getElementById('editPy').value       = entrada.py || '';
+        document.getElementById('editNota').value     = entrada.nota || '';
+
+        document.getElementById('entradaModalImage').src = entrada.imagem || 'https://via.placeholder.com/280x280?text=Sem+Imagem';
+
+        // Mostra botões de PDF
+        document.querySelectorAll('.modal-footer .btn-outline-success, .modal-footer .btn-outline-danger')
+                .forEach(btn => btn.style.display = 'inline-block');
+
+        modal.show();
+      }
+
+      async function salvarEdicaoEntrada() {
+        if (!editingEntradaId) return;
+
+        const updated = {
+          id: editingEntradaId,
+          nome:     document.getElementById('editProduto').value.trim(),
+          qt:       Number(document.getElementById('editQt').value) || 1,
+          dataHora: document.getElementById('editDataHora').value.trim(),
+          empresa:  document.getElementById('editEmpresa').value.trim(),
+          po:       document.getElementById('editPo').value.trim(),
+          ri:       document.getElementById('editRi').value.trim(),
+          py:       document.getElementById('editPy').value.trim(),
+          nota:     document.getElementById('editNota').value.trim(),
+        };
+
+        await DB.updateEntrada(editingEntradaId, updated);
+        alert('Entrada atualizada com sucesso!');
+        modal.hide();
+        carregarAssets();
+      }
+
+      async function deletarRegistro(source, id) {
+        if (!id) return;
+        if (!confirm('Deseja excluir este registro?')) return;
+
+        if (source === 'entrada') {
+          await DB.deleteEntrada(id);
+        } else {
+          await DB.deleteItem('assets', id);
+        }
+        carregarAssets();
+      }
+
+      function gerarRelatorioPDF(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        const now = new Date();
+
+        const payload = data || {
+          codigo: document.getElementById('assetCodigo')?.value?.trim() || '---',
+          nome:   document.getElementById('assetNome')?.value?.trim()   || '---',
+          tipo:   document.getElementById('assetTipo')?.value?.trim()   || '---',
+          sn:     document.getElementById('assetSN')?.value?.trim()     || '---',
+          numero: document.getElementById('assetNumero')?.value?.trim() || '---',
+          imagem: currentAssetImage,
+        };
+
+        doc.setFontSize(18);
+        doc.text('Relatório de Asset', 40, 50);
+        doc.setFontSize(10);
+        doc.text(`Gerado em: ${now.toLocaleString('pt-BR')}`, 40, 70);
+
+        const rows = [
+          ['Código', payload.codigo],
+          ['Nome do Produto', payload.nome],
+          ['Asset', payload.tipo],
+          ['SN', payload.sn],
+          ['Nº do Asset', payload.numero],
+        ];
+
+        doc.autoTable({
+          startY: 90,
+          body: rows,
+          theme: 'grid',
+          styles: { fontSize: 11, cellPadding: 6 },
+          margin: { left: 40, right: 40 },
+        });
+
+        if (payload.imagem) {
+          const imgWidth = 140;
+          const imgHeight = 140;
+          doc.addImage(payload.imagem, 'JPEG', 40, 250, imgWidth, imgHeight);
+        }
+
+        doc.save(`asset_${payload.codigo || 'sem_codigo'}_${now.toISOString().slice(0,10)}.pdf`);
+      }
+
+      async function gerarPDF(tipo) {
+        // Aqui você deve implementar a lógica real de geração de relatório de entradas/saídas
+        // Por enquanto apenas um exemplo simples
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(16);
+        doc.text(`Relatório de ${tipo === 'entradas' ? 'Entradas' : 'Saídas'}`, 20, 20);
+        doc.setFontSize(10);
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 20, 35);
+
+        // Você pode buscar todos os registros de entradas/saídas aqui
+        // Exemplo fictício:
+        doc.text(`Total de registros: -- (implementar busca real)`, 20, 55);
+
+        doc.save(`relatorio_${tipo}_${new Date().toISOString().slice(0,10)}.pdf`);
+      }
+
+      // Expor funções
+      window.carregarAssets     = carregarAssets;
+      window.salvarAsset        = salvarAsset;
+      window.deletarRegistro    = deletarRegistro;
+      window.abrirEdicaoEntrada = abrirEdicaoEntrada;
+      window.salvarEdicaoEntrada = salvarEdicaoEntrada;
+      window.gerarPDF           = gerarPDF;
+      window.gerarRelatorioPDF  = gerarRelatorioPDF;
+
+      window.addEventListener('load', () => {
+        access.initAccess({
+          mainScreenId: 'mainScreen',
+          navbarId: 'navbar',
+          userNameId: 'userName',
+          userDisplayName: 'Usuário',
+          validLogin: 'admin',
+          validSenha: '123456',
+        });
+
+        carregarAssets();
+      });
+    </script>
+  </body>
+</html>
