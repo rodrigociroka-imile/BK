@@ -1,785 +1,685 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SCI – Inbound / Outbound</title>
-    <link rel="shortcut icon" href="./img/CDC-ESTOQUE.png">
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-      body {
-        background-color: #f2f6ff;
-        font-family: "Segoe UI", sans-serif;
-      }
-      .navbar {
-        background: linear-gradient(135deg, #0d6efd, #0a58ca);
-      }
-      .card {
-        border: none;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.09);
-      }
-      .preview-img {
-        max-width: 280px;
-        max-height: 280px;
-        object-fit: cover;
-        border-radius: 12px;
-      }
-      .table-fixed {
-        max-height: 360px;
-        overflow: auto;
-      }
-      .modal-title {
-        font-weight: 700;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- NAVBAR -->
-    <nav id="mainNavbar" class="navbar navbar-dark d-none">
-      <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1 fw-bold"
-          ><i class="fas fa-boxes-stacked"></i> Inbound / Outbound</span
-        >
-        <div class="d-flex align-items-center gap-3">
-          <span class="text-white fw-semibold">
-            Bem-vindo, <strong id="userName">Usuário</strong>
-          </span>
-          <button onclick="logout()" class="btn btn-outline-light btn-sm">
-            <i class="fas fa-sign-out-alt"></i> Sair
-          </button>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCI – Inbound / Outbound</title>
+  <link rel="shortcut icon" href="./img/CDC-ESTOQUE.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { background-color: #f2f6ff; font-family: "Segoe UI", sans-serif; }
+    .navbar { background: linear-gradient(135deg, #0d6efd, #0a58ca); }
+    .card { border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.09); }
+    .preview-img { max-width: 280px; max-height: 280px; object-fit: cover; border-radius: 12px; }
+    .table-fixed { max-height: 400px; overflow-y: auto; }
+    .modal-title { font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="mainNavbar" class="navbar navbar-dark d-none">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h1 fw-bold"><i class="fas fa-boxes-stacked"></i> Inbound / Outbound</span>
+    <div class="d-flex align-items-center gap-3">
+      <span class="text-white fw-semibold">Bem-vindo, <strong id="userName">Usuário</strong></span>
+      <button onclick="logout()" class="btn btn-outline-light btn-sm"><i class="fas fa-sign-out-alt"></i> Sair</button>
+    </div>
+  </div>
+</nav>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="container d-flex align-items-center justify-content-center min-vh-100">
+  <div class="card shadow-lg" style="width: 100%; max-width: 420px">
+    <div class="card-body p-5">
+      <div class="text-center mb-4">
+        <i class="fa-solid fa-boxes-stacked fa-4x text-primary mb-3"></i>
+        <h2 class="fw-bold">Controle de Entrada / Saída</h2>
+        <p class="text-muted">Acesse para registrar e visualizar movimentações</p>
       </div>
-    </nav>
-    <!-- LOGIN -->
-    <div
-      id="loginScreen"
-      class="container d-flex align-items-center justify-content-center min-vh-100"
-    >
-      <div class="card shadow-lg" style="width: 100%; max-width: 420px">
-        <div class="card-body p-5">
-          <div class="text-center mb-4">
-            <i class="fa-solid fa-boxes-stacked fa-4x text-primary mb-3"></i>
-            <h2 class="fw-bold">Controle de Entrada / Saída</h2>
-            <p class="text-muted">Acesse para registrar e visualizar movimentações</p>
-          </div>
-          <form id="loginForm">
-            <div class="mb-3">
-              <label class="form-label">Login</label>
-              <input
-                type="text"
-                id="loginInput"
-                class="form-control form-control-lg"
-                placeholder="Informe o login"
-                required
-              />
-            </div>
-            <div class="mb-4">
-              <label class="form-label">Senha</label>
-              <input
-                type="password"
-                id="senhaInput"
-                class="form-control form-control-lg"
-                placeholder="Informe a senha"
-                required
-              />
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg w-100">
-              Entrar no Sistema
-            </button>
-          </form>
-          <div class="text-center mt-4 text-muted small">
-            <strong>Teste:</strong> login <code>inbound</code> • senha
-            <code>inbound123</code>
-          </div>
+      <form id="loginForm">
+        <div class="mb-3">
+          <label class="form-label">Login</label>
+          <input type="text" id="loginInput" class="form-control form-control-lg" placeholder="Informe o login" required />
         </div>
+        <div class="mb-4">
+          <label class="form-label">Senha</label>
+          <input type="password" id="senhaInput" class="form-control form-control-lg" placeholder="Informe a senha" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-100">Entrar no Sistema</button>
+      </form>
+      <div class="text-center mt-4 text-muted small">
+        <strong>Teste:</strong> login <code>inbound</code> • senha <code>inbound123</code>
       </div>
     </div>
-    <!-- CONTEÚDO PRINCIPAL -->
-    <div id="mainContent" class="d-none container py-4">
-      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
-        <div>
-          <h2 class="fw-bold text-primary mb-1">Inbound / Outbound</h2>
-          <p class="text-muted mb-0">Registre entradas/saídas e visualize rapidamente.</p>
-        </div>
-        <button id="btnRefresh" class="btn btn-outline-primary">
-          <i class="fas fa-sync-alt me-2"></i> Atualizar dados
-        </button>
-      </div>
-      <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link active"
-            id="tabInbound"
-            data-bs-toggle="tab"
-            data-bs-target="#inbound"
-            type="button"
-            role="tab"
-            aria-controls="inbound"
-            aria-selected="true"
-          >
-            Entrada
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link"
-            id="tabOutbound"
-            data-bs-toggle="tab"
-            data-bs-target="#outbound"
-            type="button"
-            role="tab"
-            aria-controls="outbound"
-            aria-selected="false"
-          >
-            Saída
-          </button>
-        </li>
-      </ul>
-      <div class="tab-content">
-        <!-- INBOUND -->
-        <div class="tab-pane fade show active" id="inbound" role="tabpanel">
-          <div class="row g-3">
-            <div class="col-lg-6">
-              <div class="card">
-                <div class="card-header bg-primary text-white">
-                  <strong>Cadastrar Entrada</strong>
-                </div>
-                <div class="card-body">
-                  <form id="formEntrada">
-                    <div class="mb-3">
-                      <label class="form-label">Código</label>
-                      <!--<input id="codigo" class="form-control" required />-->
-                      <input id="codigo" class="form-control" placeholder="EX: 123456789" required />
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Nome do Produto</label>
-                      <!--<input id="nomeProduto" class="form-control" required />-->
-                      <input id="nomeProduto" class="form-control" placeholder="EX: Mini PC, Notebook" required />
-                    </div>
-                    <div class="form-check mb-3">
-                      <input class="form-check-input" type="checkbox" id="ativo" />
-                      <label class="form-check-label" for="ativo">
-                        Ativo
-                      </label>
-                    </div>
+  </div>
+</div>
 
-                    <!-- Campos que aparecem apenas quando "Ativo" está marcado -->
-                    <div id="camposAtivo" class="d-none mb-3 row g-2">
-                      <div class="col-6">
-                        <label class="form-label">SN (Serial Number)</label>
-                          <!-- <input id="sn" class="form-control" placeholder="Número de série" />-->
-                        <input id="sn" class="form-control" placeholder="Número de série" required />
-                      </div>
-                      <div class="col-6">
-                        <label class="form-label">Nº do Asset</label>
-                        <input id="asset" class="form-control" placeholder="Número do asset" required />
-                      </div>
-                    </div>
-
-                    <div class="mb-3 row g-2">
-                      <div class="col-6">
-                        <label class="form-label">Empresa</label> 
-                        <!--<input id="nomeProduto" class="form-control" required />-->
-                        <input id="empresa" class="form-control" placeholder="EX: Empresa LTDA" required />
-                      </div>
-                      <div class="col-6">
-                        <label class="form-label">Quantidade</label>
-                        <input id="qt" type="number" min="1" class="form-control" required />
-                      </div>
-                    </div>
-                    <div class="mb-3 row g-2">
-                      <div class="col-6">
-                        <label class="form-label">Data Chegada</label>
-                        <input id="dataChegada" type="date" class="form-control" required />
-                      </div>
-                      <div class="col-6">
-                        <label class="form-label">PO / RI / PY</label>
-                        <div class="d-flex gap-2">
-                          <input id="po" placeholder="PO" class="form-control" />
-                          <input id="ri" placeholder="RI" class="form-control" />
-                          <input id="py" placeholder="PY" class="form-control" />
-                        </div>
-                      </div>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Importar planilha</label>
-                      <input type="file" id="bulkFileInput" accept=".xlsx,.xls,.csv" class="form-control" />
-                      <small class="text-muted">O arquivo deve conter colunas como: codigo, nome do produto, sn, numero do asset, empresa, quantidade, dataChegada, po, ri, py, ativo.</small>
-                    </div>
-                    <div class="mb-3">
-                      <button type="button" id="bulkSaveBtn" class="btn btn-secondary w-100" disabled>
-                        <i class="fas fa-file-upload me-1"></i> Salvar entradas em massa
-                      </button>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Foto</label>
-                      <input type="file" id="fileInput" accept="image/*" class="form-control" />
-                      <img id="preview" class="preview-img mt-3 border" src="https://via.placeholder.com/280x280?text=Sem+Imagem" alt="Preview" />
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                      <button type="button" onclick="openCamera()" class="btn btn-outline-primary">
-                        <i class="fas fa-camera me-1"></i> Usar câmera
-                      </button>
-                      <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> Salvar Entrada
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6">
-              <div class="card">
-                <div class="card-header bg-secondary text-white">
-                  <strong>Últimas Entradas</strong>
-                </div>
-                <div class="card-body p-0">
-                  <div class="p-3">
-                    <input id="searchEntrada" class="form-control" placeholder="Buscar por produto..." />
-                  </div>
-                  <div class="table-fixed">
-                    <table class="table table-hover mb-0">
-                      <thead class="table-light">
-                        <tr>
-                          <th>Nome do Produto</th>
-                          <th>Qt</th>
-                          <th>Data</th>
-                          <th>Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody id="listaEntradas"></tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- OUTBOUND (mantido sem alterações) -->
-        <div class="tab-pane fade" id="outbound" role="tabpanel">
-          <div class="row g-3">
-            <div class="col-lg-6">
-              <div class="card">
-                <div class="card-header bg-primary text-white">
-                  <strong>Cadastrar Saída</strong>
-                </div>
-                <div class="card-body">
-                  <form id="formSaida">
-                    <div class="mb-3">
-                      <label class="form-label">Código</label>
-                      <!--<input id="saida-codigo" class="form-control" required />-->
-                      <input id="saida-codigo" class="form-control" placeholder="EX: 123456789" required />
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Nome do Produto</label>
-                      <!--<input id="nomeProdutoSaida" class="form-control" required />-->
-                      <input id="nomeProdutoSaida" class="form-control" placeholder="EX: Mini PC, Notebook" required />
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Quantidade</label>
-                      <input id="saida-qt" type="number" min="1" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Região</label>
-                      <!--<input id="region" class="form-control" required />-->
-                      <input id="region" class="form-control" placeholder="EX: Note, Sul" required />
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Estação</label>
-                      <!--<input id="station" class="form-control" required />-->
-                      <input id="station" class="form-control" placeholder="EX: RDC, CDC" required />
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Observação</label>
-                      <textarea id="observacao" class="form-control" rows="2"></textarea>
-                      <small class="text-muted">Campo opcional para detalhes adicionais sobre a saída.</small>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                      <i class="fas fa-save me-1"></i> Salvar Saída
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6">
-              <div class="card">
-                <div class="card-header bg-secondary text-white">
-                  <strong>Últimas Saídas</strong>
-                </div>
-                <div class="card-body p-0">
-                  <div class="p-3">
-                    <input id="searchSaida" class="form-control" placeholder="Buscar por produto..." />
-                  </div>
-                  <div class="table-fixed">
-                    <table class="table table-hover mb-0">
-                      <thead class="table-light">
-                        <tr>
-                          <th>Nome do Produto</th>
-                          <th>Qt</th>
-                          <th>Local</th>
-                          <th>Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody id="listaSaidas"></tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<!-- CONTEÚDO PRINCIPAL -->
+<div id="mainContent" class="d-none container py-4">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h2 class="fw-bold text-primary mb-1">Inbound / Outbound</h2>
+      <p class="text-muted mb-0">Registre entradas e saídas de ativos</p>
     </div>
+    <button id="btnRefresh" class="btn btn-outline-primary"><i class="fas fa-sync-alt me-2"></i>Atualizar</button>
+  </div>
 
-    <!-- CAMERA MODAL -->
-    <div class="modal fade" id="cameraModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Capturar Foto</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body text-center">
-            <video id="video" playsinline style="width:100%; max-height:360px;"></video>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="capturarFoto()">Capturar</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tabInbound" data-bs-toggle="tab" data-bs-target="#inbound" type="button" role="tab">Entrada</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tabOutbound" data-bs-toggle="tab" data-bs-target="#outbound" type="button" role="tab">Saída</button>
+    </li>
+  </ul>
 
-    <!-- ENTRADA DETALHES MODAL (ainda sem SN e Asset ) -->
-    <div class="modal fade" id="entradaModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Detalhes da Entrada</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="mb-2">
+  <div class="tab-content">
+    <!-- ENTRADA -->
+    <div class="tab-pane fade show active" id="inbound">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-primary text-white"><strong>Nova Entrada</strong></div>
+            <div class="card-body">
+              <form id="formEntrada">
+                <div class="mb-3">
                   <label class="form-label">Código</label>
-                  <input id="entradaModalCodigo" class="form-control" disabled />
+                  <input id="codigo" class="form-control" placeholder="EX: 123456789" required />
                 </div>
-                <div class="mb-2">
+                <div class="mb-3">
                   <label class="form-label">Nome do Produto</label>
-                  <input id="entradaModalNome" class="form-control" disabled />
+                  <input id="nomeProduto" class="form-control" placeholder="EX: Mini PC, Notebook, Switch..." required />
                 </div>
-                <div class="mb-2">
-                  <label class="form-label">SN (Serial Number)</label>
-                  <input id="entradaModalSN" class="form-control" disabled />
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="ativo" checked />
+                  <label class="form-check-label" for="ativo">É ativo (possui SN e Asset)</label>
                 </div>
-                <div class="mb-2">
-                  <label class="form-label">Nº do Asset</label>
-                  <input id="entradaModalNumero" class="form-control" disabled />
-                </div>
-                <div class="mb-2">
-                  <label class="form-label">Ativo</label>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="entradaModalAtivo" disabled />
-                    <label class="form-check-label" for="entradaModalAtivo">Ativo</label>
+
+                <div id="camposAtivo" class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label">SN (Serial Number)</label>
+                    <input id="sn" class="form-control" placeholder="Número de série" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Nº do Asset</label>
+                    <input id="asset" class="form-control bg-light" placeholder="Gerado automaticamente" readonly />
                   </div>
                 </div>
-                <div class="mb-2">
-                  <label class="form-label">Empresa</label>
-                  <input id="entradaModalEmpresa" class="form-control" disabled />
+
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Empresa</label>
+                    <input id="empresa" class="form-control" placeholder="EX: Empresa XYZ Ltda" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Quantidade</label>
+                    <input id="qt" type="number" min="1" class="form-control" value="1" required />
+                  </div>
                 </div>
-                <div class="mb-2">
-                  <label class="form-label">Quantidade</label>
-                  <input id="entradaModalQt" class="form-control" disabled />
+
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Data Chegada</label>
+                    <input id="dataChegada" type="date" class="form-control" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">PO / RI / PY</label>
+                    <div class="input-group">
+                      <input id="po" class="form-control" placeholder="PO" />
+                      <input id="ri" class="form-control" placeholder="RI" />
+                      <input id="py" class="form-control" placeholder="PY" />
+                    </div>
+                  </div>
                 </div>
-                <div class="mb-2">
-                  <label class="form-label">Data Chegada</label>
-                  <input id="entradaModalDataChegada" class="form-control" disabled />
+
+                <div class="mb-3">
+                  <label class="form-label">Importar planilha (.xlsx, .xls, .csv)</label>
+                  <input type="file" id="bulkFileInput" accept=".xlsx,.xls,.csv" class="form-control" />
+                  <small class="text-muted mt-1 d-block">
+                    Colunas esperadas: Código, Nome do Produto, SN (Serial Number), Empresa, Quantidade, Data Chegada, PO, RI, PY, Ativo
+                  </small>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-2">
-                  <label class="form-label">PO</label>
-                  <input id="entradaModalPo" class="form-control" disabled />
+
+                <button type="button" id="bulkSaveBtn" class="btn btn-secondary w-100 mb-3" disabled>
+                  <i class="fas fa-file-upload me-1"></i> Salvar entradas em massa
+                </button>
+
+                <div class="mb-3">
+                  <label class="form-label">Foto (opcional)</label>
+                  <input type="file" id="fileInput" accept="image/*" class="form-control" />
+                  <img id="preview" class="preview-img mt-3 border d-block mx-auto" src="https://via.placeholder.com/280x280?text=Sem+Imagem" alt="Pré-visualização" />
                 </div>
-                <div class="mb-2">
-                  <label class="form-label">RI</label>
-                  <input id="entradaModalRi" class="form-control" disabled />
+
+                <div class="d-flex justify-content-between">
+                  <button type="button" class="btn btn-outline-primary" onclick="openCamera()">
+                    <i class="fas fa-camera me-1"></i> Usar câmera
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Salvar Entrada
+                  </button>
                 </div>
-                <div class="mb-2">
-                  <label class="form-label">PY</label>
-                  <input id="entradaModalPy" class="form-control" disabled />
-                </div>
-                <div class="mb-2">
-                  <label class="form-label">Data Registro</label>
-                  <input id="entradaModalDataHora" class="form-control" disabled />
-                </div>
-              </div>
-            </div>
-            <div class="mt-3 text-center">
-              <img id="entradaModalImage" class="preview-img border" src="https://via.placeholder.com/280x280?text=Sem+Imagem" alt="Imagem" />
+              </form>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-secondary text-white"><strong>Últimas Entradas</strong></div>
+            <div class="card-body p-0">
+              <div class="p-3 border-bottom">
+                <input id="searchEntrada" class="form-control" placeholder="Buscar por nome ou código..." />
+              </div>
+              <div class="table-fixed">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light sticky-top">
+                    <tr>
+                      <th>Código</th>
+                      <th>Nome do Produto</th>
+                      <th>Qt</th>
+                      <th>Data</th>
+                      <th>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody id="listaEntradas"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="acesso.js"></script>
-    <script type="module">
-      import { DB } from './bd.js';
-      let currentImage = '';
-      let currentStream = null;
-      let entradasCache = [];
-      let entradaFilter = '';
-      let saidaFilter = '';
-      let bulkEntries = [];
+    <!-- SAÍDA -->
+    <div class="tab-pane fade" id="outbound">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-primary text-white"><strong>Nova Saída</strong></div>
+            <div class="card-body">
+              <form id="formSaida">
+                <div class="mb-3">
+                  <label class="form-label">Código</label>
+                  <input id="saida-codigo" class="form-control" placeholder="Digite o código do ativo" required autofocus />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Nome do Produto</label>
+                  <input id="nomeProdutoSaida" class="form-control bg-light" readonly placeholder="Será preenchido automaticamente" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Quantidade</label>
+                  <input id="saida-qt" type="number" min="1" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Região</label>
+                  <input id="region" class="form-control" placeholder="EX: Norte, Sul, Note..." required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Estação</label>
+                  <input id="station" class="form-control" placeholder="EX: RDC, CDC, Filial..." required />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Observação</label>
+                  <textarea id="observacao" class="form-control" rows="2" placeholder="Motivo, destino, responsável..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fas fa-save me-1"></i> Registrar Saída
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
 
-      access.initAccess({
-        mainScreenId: 'mainContent',
-        navbarId: 'mainNavbar',
-        userNameId: 'userName',
-        userDisplayName: 'Gabriel',
-        validLogin: 'inbound',
-        validSenha: 'inbound123',
-      });
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-header bg-secondary text-white"><strong>Últimas Saídas</strong></div>
+            <div class="card-body p-0">
+              <div class="p-3 border-bottom">
+                <input id="searchSaida" class="form-control" placeholder="Buscar por nome ou código..." />
+              </div>
+              <div class="table-fixed">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light sticky-top">
+                    <tr>
+                      <th>Código</th>
+                      <th>Nome do Produto</th>
+                      <th>Qt</th>
+                      <th>Data</th>
+                      <th>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody id="listaSaidas"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-      // Mostrar/esconder campos SN e Asset quando checkbox mudar
-      document.getElementById('ativo').addEventListener('change', function() {
-        const campos = document.getElementById('camposAtivo');
-        if (this.checked) {
-          campos.classList.remove('d-none');
-        } else {
-          campos.classList.add('d-none');
-          // Opcional: limpar os campos quando desmarcar
-          document.getElementById('sn').value = '';
-          document.getElementById('asset').value = '';
-        }
-      });
+<!-- Modal Câmera -->
+<div class="modal fade" id="cameraModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Capturar Foto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <video id="video" playsinline style="width:100%; max-height:360px; background:#000;"></video>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="capturarFoto()">Capturar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-      function normalizeString(value) {
-        return String(value || '').toLowerCase();
-      }
+<!-- Modal Detalhes Entrada -->
+<div class="modal fade" id="entradaModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalhes da Entrada</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="mb-2"><strong>Código:</strong> <input id="entradaModalCodigo" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2"><strong>Produto:</strong> <input id="entradaModalNome" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2"><strong>SN:</strong> <input id="entradaModalSN" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2"><strong>Asset:</strong> <input id="entradaModalNumero" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2">
+              <strong>Ativo:</strong>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="entradaModalAtivo" disabled>
+                <label class="form-check-label" for="entradaModalAtivo">Sim</label>
+              </div>
+            </div>
+            <div class="mb-2"><strong>Empresa:</strong> <input id="entradaModalEmpresa" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2"><strong>Quantidade:</strong> <input id="entradaModalQt" class="form-control form-control-sm" disabled></div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-2"><strong>Data Chegada:</strong> <input id="entradaModalDataChegada" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2"><strong>PO:</strong> <input id="entradaModalPo" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2"><strong>RI:</strong> <input id="entradaModalRi" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2"><strong>PY:</strong> <input id="entradaModalPy" class="form-control form-control-sm" disabled></div>
+            <div class="mb-2"><strong>Registrado em:</strong> <input id="entradaModalDataHora" class="form-control form-control-sm" disabled></div>
+          </div>
+        </div>
+        <div class="text-center mt-4">
+          <img id="entradaModalImage" class="preview-img border" src="https://via.placeholder.com/280x280?text=Sem+Imagem" alt="Foto do ativo">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-      function normalizeHeader(value) {
-        return String(value || '')
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/\s+/g, '')
-          .replace(/[^a-zA-Z0-9]/g, '')
-          .toLowerCase();
-      }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="acesso.js"></script> <!-- seu arquivo de autenticação -->
 
-      function renderEntradas() {
-        const tbody = document.getElementById('listaEntradas');
-        tbody.innerHTML = '';
-        const activeEntries = entradasCache.filter((e) => e.ativo);
-        const filtered = entradaFilter
-          ? activeEntries.filter((e) => normalizeString(e.nome).includes(entradaFilter))
-          : activeEntries;
-        if (!filtered.length) {
-          tbody.innerHTML =
-            '<tr><td colspan="4" class="text-center text-muted">Nenhuma entrada encontrada.</td></tr>';
-          return;
-        }
-        filtered.slice(0, 12).forEach((e) => {
-          const tr = document.createElement('tr');
-          tr.setAttribute('style', 'cursor:pointer');
-          tr.setAttribute('onclick', `openEntradaModal('${e.id}')`);
-          tr.innerHTML = `
-            <td>${e.nome || '-'}</td>
-            <td>${e.quantidade || 0}</td>
-            <td>${e.dataHora || '-'}</td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deletarEntrada('${e.id}')">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
+<script type="module">
+import { DB } from './bd.js';
 
-      async function carregarEntradas() {
-        entradasCache = (await DB.getEntradas()).reverse();
-        renderEntradas();
-      }
+let currentImage = '';
+let currentStream = null;
+let entradasCache = [];
+let saidasCache = [];
+let entradaFilter = '';
+let saidaFilter = '';
+let bulkEntries = [];
 
-      async function carregarSaidas() {
-        const saidas = (await DB.getSaidas()).reverse();
-        const tbody = document.getElementById('listaSaidas');
-        tbody.innerHTML = '';
-        const filtered = saidaFilter
-          ? saidas.filter((s) =>
-              String(s.nome || s.codigo || '')
-                .toLowerCase()
-                .includes(saidaFilter),
-            )
-          : saidas;
-        filtered.slice(0, 12).forEach((s) => {
-          const local = [s.region, s.station].filter(Boolean).join(' / ') || '-';
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${s.nome || s.codigo || '-'}</td>
-            <td>${s.quantidade || 0}</td>
-            <td>${local}</td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-danger" onclick="deletarSaida('${s.id}')">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
+// Inicializa autenticação (seu acesso.js)
+access.initAccess({
+  mainScreenId: 'mainContent',
+  navbarId: 'mainNavbar',
+  userNameId: 'userName',
+  userDisplayName: 'Operador',
+  validLogin: 'inbound',
+  validSenha: 'inbound123',
+});
 
-      async function loadTables() {
-        await Promise.all([carregarEntradas(), carregarSaidas()]);
-      }
-      async function parseBulkFile(file) {
-        try {
-          const data = await file.arrayBuffer();
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-          if (!json.length) return [];
+// =============================================
+//  GERA ASSET AUTOMÁTICO 0001–2000
+// =============================================
+async function gerarProximoAsset() {
+  const todas = await DB.getEntradas();
+  const usados = todas
+    .filter(e => e.ativo && e.asset && /^\d{4}$/.test(e.asset))
+    .map(e => Number(e.asset));
 
-          const headers = json[0].map((h) => normalizeHeader(String(h)));
-          return json.slice(1).map((row) => {
-            const obj = {};
-            headers.forEach((key, idx) => {
-              obj[key] = row[idx];
-            });
-            return obj;
-          });
-        } catch (err) {
-          console.warn('Falha ao ler arquivo:', err);
-          return [];
-        }
-      }
+  if (usados.length >= 2000) return "LIMITE";
 
-      async function salvarEntradasEmMassa() {
-        if (!bulkEntries.length) {
-          alert('Nenhuma planilha carregada para importação.');
-          return;
-        }
+  for (let i = 1; i <= 2000; i++) {
+    if (!usados.includes(i)) return String(i).padStart(4, '0');
+  }
+  return "LIMITE";
+}
 
-        if (!confirm(`Importar ${bulkEntries.length} entradas?`)) return;
+// Mostrar/esconder campos SN/Asset + gerar asset
+document.getElementById('ativo').addEventListener('change', async function() {
+  const campos = document.getElementById('camposAtivo');
+  const assetEl = document.getElementById('asset');
 
-        for (const row of bulkEntries) {
-          const entrada = {
-            id: Date.now().toString(36).toUpperCase(),
-            codigo: String(row.codigo || row.code || '').trim(),
-            nome: String(row.nome || row.product || '').trim(),
-            empresa: String(row.empresa || row.company || '').trim(),
-            quantidade: Number(row.quantidade || row.qt || 0),
-            dataHora: new Date().toLocaleString('pt-BR'),
-            dataChegada: String(row.dataChegada || row.date || row.data || '').trim(),
-            po: String(row.po || '').trim(),
-            ri: String(row.ri || '').trim(),
-            py: String(row.py || '').trim(),
-            imagem: '',
-            ativo:
-              row.ativo !== undefined && row.ativo !== ''
-                ? String(row.ativo).toLowerCase() === 'true'
-                : true,
-            qrData: '',
-          };
+  if (this.checked) {
+    campos.classList.remove('d-none');
+    if (!assetEl.value.trim()) {
+      assetEl.value = await gerarProximoAsset();
+    }
+  } else {
+    campos.classList.add('d-none');
+    assetEl.value = '';
+  }
+});
 
-          entrada.qrData = `ENTRADA|ID:${entrada.id}|COD:${entrada.codigo}|PROD:${entrada.nome}|EMP:${entrada.empresa}|QT:${entrada.quantidade}|CHEGADA:${entrada.dataChegada}|PO:${entrada.po || '--'}|RI:${entrada.ri || '--'}|PY:${entrada.py || '--'}|REG:${entrada.dataHora}`;
+// Busca automática na saída
+document.getElementById('saida-codigo').addEventListener('input', async (e) => {
+  const cod = (e.target.value || '').trim();
+  const nomeEl = document.getElementById('nomeProdutoSaida');
 
-          await DB.addEntrada(entrada);
-        }
+  if (!cod) {
+    nomeEl.value = '';
+    return;
+  }
 
-        alert('Importação concluída.');
-        bulkEntries = [];
-        document.getElementById('bulkFileInput').value = '';
-        document.getElementById('bulkSaveBtn').disabled = true;
-        await loadTables();
-      }
+  const match = entradasCache.find(en => 
+    en.ativo && String(en.codigo).trim().toLowerCase() === cod.toLowerCase()
+  );
 
-      async function deletarEntrada(id) {
-        if (!id) return;
-        if (!confirm('Excluir entrada?')) return;
-        await DB.deleteEntrada(id);
-        await loadTables();
-      }
+  nomeEl.value = match ? match.nome : '(não encontrado)';
+});
 
-      async function deletarSaida(id) {
-        if (!id) return;
-        if (!confirm('Excluir saída?')) return;
-        await DB.deleteSaida(id);
-        await loadTables();
-      }
+// Render entradas
+function renderEntradas() {
+  const tbody = document.getElementById('listaEntradas');
+  tbody.innerHTML = '';
 
-      document.getElementById('btnRefresh').addEventListener('click', loadTables);
+  const filtrado = entradaFilter
+    ? entradasCache.filter(e => 
+        (e.nome || '').toLowerCase().includes(entradaFilter) ||
+        (e.codigo || '').toLowerCase().includes(entradaFilter))
+    : entradasCache;
 
-      document.getElementById('searchEntrada').addEventListener('input', (e) => {
-        entradaFilter = String(e.target.value || '').trim().toLowerCase();
-        renderEntradas();
-      });
+  filtrado.slice(0, 20).forEach(e => {
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.innerHTML = `
+      <td>${e.nome || '-'}</td>
+      <td>${e.quantidade || 0}</td>
+      <td>${e.dataChegada || '-'}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deletarEntrada('${e.id}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+    tr.onclick = () => openEntradaModal(e.id);
+    tbody.appendChild(tr);
+  });
 
-      document.getElementById('searchSaida').addEventListener('input', (e) => {
-        saidaFilter = String(e.target.value || '').trim().toLowerCase();
-        carregarSaidas();
-      });
+  if (!filtrado.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Nenhuma entrada encontrada</td></tr>';
+  }
+}
 
-      document.getElementById('nomeProduto').addEventListener('input', (e) => {
-        const value = String(e.target.value || '').trim();
-        entradaFilter = value.toLowerCase();
-        renderEntradas();
-      });
+// Render saídas (exemplo simples)
+function renderSaidas() {
+  const tbody = document.getElementById('listaSaidas');
+  tbody.innerHTML = '';
 
-      document.getElementById('bulkFileInput').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) {
-          bulkEntries = [];
-          document.getElementById('bulkSaveBtn').disabled = true;
-          return;
-        }
-        bulkEntries = await parseBulkFile(file);
-        document.getElementById('bulkSaveBtn').disabled = !bulkEntries.length;
-        if (bulkEntries.length) {
-          alert(`${bulkEntries.length} entradas prontas para importação.`);
-        }
-      });
+  const filtrado = saidaFilter
+    ? saidasCache.filter(s => 
+        (s.nome || '').toLowerCase().includes(saidaFilter) ||
+        (s.codigo || '').toLowerCase().includes(saidaFilter))
+    : saidasCache;
 
-      document.getElementById('bulkSaveBtn').addEventListener('click', salvarEntradasEmMassa);
+  filtrado.slice(0, 20).forEach(s => {
+    const local = [s.region, s.station].filter(Boolean).join(' / ') || '-';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.nome || s.codigo || '-'}</td>
+      <td>${s.quantidade || 0}</td>
+      <td>${local}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-danger" onclick="deletarSaida('${s.id}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-      document.getElementById('fileInput').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+// Carregar dados
+async function loadTables() {
+  entradasCache = (await DB.getEntradas() || []).reverse();
+  saidasCache   = (await DB.getSaidas()   || []).reverse();
+  renderEntradas();
+  renderSaidas();
+}
 
-        // Mostrar preview imediatamente, usando objectURL como fallback
-        const preview = document.getElementById('preview');
-        const objectUrl = URL.createObjectURL(file);
-        preview.src = objectUrl;
+// Parse planilha
+async function parseBulkFile(file) {
+  try {
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
 
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          currentImage = ev.target.result;
-          preview.src = currentImage;
-          URL.revokeObjectURL(objectUrl);
-        };
-        reader.onerror = () => {
-          currentImage = objectUrl;
-        };
-        reader.readAsDataURL(file);
-      });
+    if (json.length < 2) return [];
 
-      function openCamera() {
-        const modal = new bootstrap.Modal(document.getElementById('cameraModal'));
-        modal.show();
-        navigator.mediaDevices
-          .getUserMedia({ video: { facingMode: 'environment' } })
-          .then((stream) => {
-            currentStream = stream;
-            document.getElementById('video').srcObject = stream;
-          })
-          .catch((err) => {
-            alert('Não foi possível acessar a câmera: ' + err.message);
-            modal.hide();
-          });
-      }
+    const headers = json[0].map(h => 
+      String(h||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+       .replace(/\s+/g,'').replace(/[^a-z0-9]/gi,'').toLowerCase()
+    );
 
-      function capturarFoto() {
-        const video = document.getElementById('video');
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        currentImage = canvas.toDataURL('image/png');
-        document.getElementById('preview').src = currentImage;
-        closeCameraModal();
-      }
+    return json.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((k,i) => obj[k] = row[i] ?? '');
+      return obj;
+    });
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+}
 
-      function closeCameraModal() {
-        if (currentStream) {
-          currentStream.getTracks().forEach((t) => t.stop());
-          currentStream = null;
-        }
-        bootstrap.Modal.getInstance(document.getElementById('cameraModal')).hide();
-      }
+// Salvar em massa
+async function salvarEntradasEmMassa() {
+  if (!bulkEntries.length) return alert('Nenhuma entrada carregada.');
+  if (!confirm(`Confirmar importação de ${bulkEntries.length} itens?`)) return;
 
-      function openEntradaModal(id) {
-        const entrada = entradasCache.find((e) => e.id === id);
-        if (!entrada) return;
+  for (const r of bulkEntries) {
+    const ativo = String(r.ativo||'').toLowerCase().includes('sim') || 
+                  String(r.ativo||'').toLowerCase() === 'true' || true;
 
-        document.getElementById('entradaModalCodigo').value = entrada.codigo || '';
-        document.getElementById('entradaModalNome').value = entrada.nome || '';
-        document.getElementById('entradaModalAtivo').checked = !!entrada.ativo;
-        document.getElementById('entradaModalEmpresa').value = entrada.empresa || '';
-        document.getElementById('entradaModalQt').value = entrada.quantidade || '';
-        document.getElementById('entradaModalDataChegada').value = entrada.dataChegada || '';
-        document.getElementById('entradaModalPo').value = entrada.po || '';
-        document.getElementById('entradaModalRi').value = entrada.ri || '';
-        document.getElementById('entradaModalPy').value = entrada.py || '';
-        document.getElementById('entradaModalDataHora').value = entrada.dataHora || '';
-        document.getElementById('entradaModalImage').src = entrada.imagem || 'https://via.placeholder.com/280x280?text=Sem+Imagem';
+    let asset = String(r['numero do asset'] || r.asset || r.numerodoasset || '').trim();
+    if (ativo && !asset) {
+      asset = await gerarProximoAsset();
+      if (asset === "LIMITE") asset = '9999';
+    }
 
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('entradaModal')).show();
-      }
-      
-      document.getElementById('formEntrada').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const ativoInput = document.getElementById('ativo');
-        const entrada = {
-          id: Date.now().toString(36).toUpperCase(),
-          codigo: document.getElementById('codigo').value.trim(),
-          nome: document.getElementById('nomeProduto').value.trim(),
-          empresa: document.getElementById('empresa').value.trim(),
-          quantidade: Number(document.getElementById('qt').value),
-          dataHora: new Date().toLocaleString('pt-BR'),
-          dataChegada: document.getElementById('dataChegada').value,
-          po: document.getElementById('po').value.trim(),
-          ri: document.getElementById('ri').value.trim(),
-          py: document.getElementById('py').value.trim(),
-          imagem: currentImage,
-          ativo: ativoInput.checked,
-          sn: ativoInput.checked ? document.getElementById('sn').value.trim() : '',
-          asset: ativoInput.checked ? document.getElementById('asset').value.trim() : '',
-          qrData: '',
-        };
-        entrada.qrData = `ENTRADA|ID:${entrada.id}|COD:${entrada.codigo}|PROD:${entrada.nome}|EMP:${entrada.empresa}|QT:${entrada.quantidade}|CHEGADA:${entrada.dataChegada}|PO:${entrada.po || '--'}|RI:${entrada.ri || '--'}|PY:${entrada.py || '--'}|SN:${entrada.sn || '--'}|ASSET:${entrada.asset || '--'}|REG:${entrada.dataHora}`;
-        
-        const entradaKey = await DB.addEntrada(entrada);
-        if (!entradaKey) {
-          alert('Não foi possível salvar a entrada. Veja o console para mais detalhes.');
-          return;
-        }
-        alert('Entrada registrada com sucesso.');
-        e.target.reset();
-        document.getElementById('preview').src = 'https://via.placeholder.com/280x280?text=Sem+Imagem';
-        currentImage = '';
-        ativoInput.checked = false;
-        document.getElementById('camposAtivo').classList.add('d-none');
-        await loadTables();
-      });
+    const entrada = {
+      id: Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,8),
+      codigo: String(r.codigo || '').trim(),
+      nome: String(r['nome do produto'] || r.nomeproduto || r.nome || '').trim(),
+      sn: ativo ? String(r['sn (serial number)'] || r.sn || '').trim() : '',
+      asset: ativo ? asset : '',
+      empresa: String(r.empresa || '').trim(),
+      quantidade: Number(r.quantidade || 1),
+      dataChegada: String(r['data chegada'] || r.datachegada || '').trim(),
+      po: String(r.po || '').trim(),
+      ri: String(r.ri || '').trim(),
+      py: String(r.py || '').trim(),
+      ativo,
+      dataHora: new Date().toLocaleString('pt-BR'),
+      imagem: '',
+    };
 
-      // Expor funções chamadas por atributos onclick
-      window.openCamera = openCamera;
-      window.capturarFoto = capturarFoto;
-      window.closeCameraModal = closeCameraModal;
-      window.openEntradaModal = openEntradaModal;
-      window.deletarEntrada = deletarEntrada;
-      window.deletarSaida = deletarSaida;
-      window.salvarEntradasEmMassa = salvarEntradasEmMassa;
+    await DB.addEntrada(entrada);
+  }
 
-      window.addEventListener('load', async () => {
-        await loadTables();
-      });
-    </script>
-  </body>
+  alert('Importação concluída!');
+  bulkEntries = [];
+  document.getElementById('bulkFileInput').value = '';
+  document.getElementById('bulkSaveBtn').disabled = true;
+  await loadTables();
+}
+
+// Eventos
+document.getElementById('ativo').dispatchEvent(new Event('change')); // inicial
+
+document.getElementById('searchEntrada').addEventListener('input', e => {
+  entradaFilter = e.target.value.trim().toLowerCase();
+  renderEntradas();
+});
+
+document.getElementById('searchSaida').addEventListener('input', e => {
+  saidaFilter = e.target.value.trim().toLowerCase();
+  renderSaidas();
+});
+
+document.getElementById('bulkFileInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  bulkEntries = await parseBulkFile(file);
+  document.getElementById('bulkSaveBtn').disabled = bulkEntries.length === 0;
+});
+
+document.getElementById('bulkSaveBtn').addEventListener('click', salvarEntradasEmMassa);
+
+document.getElementById('btnRefresh').addEventListener('click', loadTables);
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('preview').src = url;
+  const reader = new FileReader();
+  reader.onload = ev => { currentImage = ev.target.result; };
+  reader.readAsDataURL(file);
+});
+
+window.openCamera = () => {
+  const modal = new bootstrap.Modal('#cameraModal');
+  modal.show();
+  navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}})
+    .then(stream => {
+      currentStream = stream;
+      document.getElementById('video').srcObject = stream;
+    })
+    .catch(err => {
+      alert('Erro ao abrir câmera: ' + err.message);
+      modal.hide();
+    });
+};
+
+window.capturarFoto = () => {
+  const video = document.getElementById('video');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  currentImage = canvas.toDataURL('image/png');
+  document.getElementById('preview').src = currentImage;
+  if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+  bootstrap.Modal.getInstance('#cameraModal').hide();
+};
+
+window.openEntradaModal = id => {
+  const e = entradasCache.find(x => x.id === id);
+  if (!e) return;
+
+  document.getElementById('entradaModalCodigo').value     = e.codigo || '';
+  document.getElementById('entradaModalNome').value       = e.nome || '';
+  document.getElementById('entradaModalSN').value         = e.sn || '';
+  document.getElementById('entradaModalNumero').value     = e.asset || '';
+  document.getElementById('entradaModalAtivo').checked    = !!e.ativo;
+  document.getElementById('entradaModalEmpresa').value    = e.empresa || '';
+  document.getElementById('entradaModalQt').value         = e.quantidade || '';
+  document.getElementById('entradaModalDataChegada').value= e.dataChegada || '';
+  document.getElementById('entradaModalPo').value         = e.po || '';
+  document.getElementById('entradaModalRi').value         = e.ri || '';
+  document.getElementById('entradaModalPy').value         = e.py || '';
+  document.getElementById('entradaModalDataHora').value   = e.dataHora || '';
+  document.getElementById('entradaModalImage').src        = e.imagem || 'https://via.placeholder.com/280?text=Sem+Foto';
+
+  new bootstrap.Modal('#entradaModal').show();
+};
+
+document.getElementById('formEntrada').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const ativo = document.getElementById('ativo').checked;
+  let asset = document.getElementById('asset').value.trim();
+
+  if (ativo && !asset) {
+    asset = await gerarProximoAsset();
+    if (asset === "LIMITE") {
+      alert("Limite de 2000 assets atingido!");
+      return;
+    }
+  }
+
+  const entrada = {
+    id: Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,6),
+    codigo: document.getElementById('codigo').value.trim(),
+    nome: document.getElementById('nomeProduto').value.trim(),
+    sn: ativo ? document.getElementById('sn').value.trim() : '',
+    asset: ativo ? asset : '',
+    empresa: document.getElementById('empresa').value.trim(),
+    quantidade: Number(document.getElementById('qt').value) || 1,
+    dataChegada: document.getElementById('dataChegada').value,
+    po: document.getElementById('po').value.trim(),
+    ri: document.getElementById('ri').value.trim(),
+    py: document.getElementById('py').value.trim(),
+    ativo,
+    dataHora: new Date().toLocaleString('pt-BR'),
+    imagem: currentImage || '',
+  };
+
+  await DB.addEntrada(entrada);
+  alert('Entrada registrada!');
+  e.target.reset();
+  document.getElementById('preview').src = 'https://via.placeholder.com/280x280?text=Sem+Imagem';
+  currentImage = '';
+  document.getElementById('ativo').checked = true;
+  document.getElementById('ativo').dispatchEvent(new Event('change'));
+  await loadTables();
+});
+
+// Saída (exemplo básico – você pode expandir)
+document.getElementById('formSaida').addEventListener('submit', async e => {
+  e.preventDefault();
+  alert('Saída registrada! (lógica de saída ainda básica – expanda conforme necessário)');
+  e.target.reset();
+  await loadTables();
+});
+
+window.deletarEntrada = async id => {
+  if (!confirm('Excluir entrada?')) return;
+  await DB.deleteEntrada(id);
+  await loadTables();
+};
+
+window.deletarSaida = async id => {
+  if (!confirm('Excluir saída?')) return;
+  await DB.deleteSaida(id);
+  await loadTables();
+};
+
+window.addEventListener('load', loadTables);
+</script>
+</body>
 </html>
