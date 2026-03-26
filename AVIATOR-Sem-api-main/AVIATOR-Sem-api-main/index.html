@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Predictor Aviator</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#ef4444",
+            "background-light": "#ffffff",
+            "background-dark": "#1f2937",
+            "text-light": "#1f2937",
+            "text-dark": "#f9fafb",
+            "secondary-light": "#f3f4f6",
+            "secondary-dark": "#374151"
+          },
+          fontFamily: { display: ["Inter", "sans-serif"] },
+          borderRadius: { DEFAULT: "0.5rem" },
+          animation: {
+            'spin-slow': 'spin 10s linear infinite',
+            'fly': 'fly 1.5s ease-in-out infinite'
+          },
+          keyframes: {
+            fly: {
+              '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+              '50%': { transform: 'translateY(-12px) rotate(5deg)' }
+            }
+          }
+        },
+      },
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    body { min-height: max(884px, 100dvh); }
+    .animate-spin-slow { animation: spin 10s linear infinite; }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+  <div class="flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-primary text-white p-4 flex items-center justify-between shadow-md">
+      <h1 class="text-xl font-bold">Predictor Aviator</h1>
+      <div class="flex items-center space-x-2">
+        <span id="hora" class="text-sm"></span>
+        <span id="proximo" class="text-xs opacity-80"></span>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-grow flex flex-col items-center justify-center p-6 text-center">
+      <div class="w-full max-w-3xl">
+        <div class="bg-white/80 dark:bg-slate-900/70 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 dark:border-white/10 overflow-hidden">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between p-6 gap-6">
+            <div class="text-left">
+              <p class="text-sm text-slate-500 dark:text-slate-400">Atualizado em</p>
+              <div class="flex items-baseline gap-3">
+                <span id="hora" class="text-3xl font-semibold text-slate-900 dark:text-white"></span>
+                <span id="proximo" class="text-sm text-slate-500 dark:text-slate-400"></span>
+              </div>
+              <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Atualiza a cada 15 segundos</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+              <div class="flex items-center gap-2">
+                <label for="datasetSelect" class="text-sm font-medium text-slate-600 dark:text-slate-300">Histórico</label>
+                <select id="datasetSelect" class="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm px-2 py-1">
+                  <option value="2x" selected>2x</option>
+                  <option value="5x">5x</option>
+                  <option value="10x">10x</option>
+                </select>
+              </div>
+              <span id="conexao" class="text-xs text-slate-500 dark:text-slate-400">Conectado</span>
+            </div>
+          </div>
+
+          <div class="border-t border-white/20 dark:border-white/10 p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <section class="space-y-4">
+                <div class="flex items-start justify-between">
+                  <h2 class="text-lg font-semibold text-slate-800 dark:text-white">Previsão</h2>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Base: <span id="baseName" class="font-semibold">2x</span></span>
+                </div>
+                <div class="relative flex items-center justify-center h-48 bg-gradient-to-br from-red-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-xl shadow-inner">
+                  <span id="textoPrevisao" class="text-6xl font-bold text-red-600 dark:text-red-400 animate-fly">--</span>
+                </div>
+                <p id="confianca" class="text-sm font-medium text-slate-600 dark:text-slate-300">Aguardando horário...</p>
+              </section>
+
+              <section class="space-y-4">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-white">Histórico</h2>
+                <div class="bg-white/60 dark:bg-slate-900/60 rounded-xl p-4 border border-white/20 dark:border-white/10">
+                  <p id="historico" class="text-sm text-slate-600 dark:text-slate-300">Carregando dados...</p>
+                  <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Os valores mostrados são baseados no histórico selecionado.</p>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- INTEGRAÇÃO DOS .JS (SEM MUDAR NADA DO RESTO) -->
+  <script type="module">
+    // Importa apenas do historico-2x.js (base principal)
+    import { getResultadosPorHora, media, mediana } from './historico-2x.js';
+    import { getResultadosPorHora as get5x } from './historico-5x.js';
+    import { getResultadosPorHora as get10x } from './historico-10x.js';
+
+    const previsaoContainer = document.getElementById("previsao");
+    const textoPrevisaoEl = document.getElementById("textoPrevisao");
+    const confiancaEl = document.getElementById("confianca");
+    const historicoEl = document.getElementById("historico");
+    const conexaoEl = document.getElementById("conexao");
+    const baseNameEl = document.getElementById("baseName");
+    const datasetSelect = document.getElementById("datasetSelect");
+    const horaEl = document.getElementById("hora");
+    const proximoEl = document.getElementById("proximo");
+
+    let ultimaHora = "";
+    let activeDataset = "2x";
+
+    const datasetMap = {
+      "2x": getResultadosPorHora,
+      "5x": get5x,
+      "10x": get10x,
+    };
+
+    // Atualiza texto de conexão para refletir o dataset ativo
+    conexaoEl.textContent = `Conectado (${activeDataset})`;
+
+    function getHistoricoByHora(hora) {
+      const fn = datasetMap[activeDataset] || getResultadosPorHora;
+      return fn(hora);
+    }
+
+    datasetSelect.addEventListener("change", () => {
+      activeDataset = datasetSelect.value;
+      conexaoEl.textContent = `Conectado (${activeDataset})`;
+      baseNameEl.textContent = activeDataset;
+      ultimaHora = ""; // força recomputar para a nova base
+      const h = atualizarHora();
+      preverParaHora(h);
+    });
+
+    // Atualiza relógio
+    function atualizarHora() {
+      const agora = new Date();
+      const h = agora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      horaEl.textContent = h;
+
+      const prox = new Date(agora);
+      prox.setMinutes(prox.getMinutes() + 1);
+      prox.setSeconds(0);
+      
+
+      return h;
+    }
+
+    // Animação de entrada do texto
+    function animarPrevisao(texto) {
+      textoPrevisaoEl.textContent = texto;
+      textoPrevisaoEl.classList.remove("opacity-0", "scale-50");
+      void textoPrevisaoEl.offsetWidth;
+      textoPrevisaoEl.classList.add("opacity-100", "scale-100");
+    }
+
+    // Função principal: prever com base na hora
+    function preverParaHora(horaAtual) {
+      if (horaAtual === ultimaHora) return;
+      ultimaHora = horaAtual;
+
+      const resultados = getHistoricoByHora(horaAtual);
+      const qtd = resultados.length;
+
+      if (qtd === 0) {
+        textoPrevisaoEl.classList.add("opacity-0");
+        confiancaEl.textContent = `Sem dados históricos (${activeDataset})`;
+        confiancaEl.className = "text-sm font-medium text-gray-500";
+        historicoEl.textContent = "";
+        return;
+      }
+
+      const avg = media(resultados);
+      const med = mediana(resultados);
+      const max = Math.max(...resultados).toFixed(2);
+      const min = Math.min(...resultados).toFixed(2);
+
+      const variacao = (Math.random() - 0.5) * 0.4 * avg;
+      const previsao = Math.max(1.1, parseFloat(avg) + variacao).toFixed(2);
+
+      animarPrevisao(`${previsao}x`);
+
+      let confianca, cor;
+      if (qtd >= 5) { confianca = "Alta"; cor = "text-green-600 dark:text-green-400"; }
+      else if (qtd >= 3) { confianca = "Média"; cor = "text-yellow-600 dark:text-yellow-400"; }
+      else { confianca = "Baixa"; cor = "text-red-600 dark:text-red-400"; }
+
+      confiancaEl.textContent = `Confiança: ${confianca} (${qtd} registro${qtd > 1 ? 's' : ''}) · ${activeDataset}`;
+      confiancaEl.className = `text-sm font-medium ${cor}`;
+
+      historicoEl.textContent = `Hist: ${min}x → ${max}x (méd ${avg}x)`;
+    }
+
+    // Atualiza a cada 15 segundos
+    setInterval(() => {
+      const hora = atualizarHora();
+      preverParaHora(hora);
+    }, 15000);
+
+    // Primeira execução
+    const horaInicial = atualizarHora();
+    preverParaHora(horaInicial);
+  </script>
+</body>
+</html>
