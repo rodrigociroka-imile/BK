@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>SPP - Sistema Planilha Profissional.EVOPRO</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+}
+
+/* HEADER */
+
+header{
+    background:#111827;
+    color:white;
+    padding:15px 25px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+header h1{
+    font-size:22px;
+}
+
+.toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+/* BOTÕES */
+
+button{
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.03);
+    opacity:0.92;
+}
+.btn-secondary{
+    background:#f59e0b;
+    color:white;
+}
+
+.btn-danger{
+    background:#dc2626;
+    color:white;
+}
+
+input.categoria{
+    width:100%;
+    padding:8px;
+    border:1px solid #d1d5db;
+    border-radius:6px;
+    font-family:inherit;
+}
+.btn-save{
+    background:#16a34a;
+    color:white;
+}
+
+.btn-dashboard{
+    background:#2563eb;
+    color:white;
+}
+
+.btn-export{
+    background:#7c3aed;
+    color:white;
+}
+
+.btn-delete{
+    background:#dc2626;
+    color:white;
+    padding:6px 10px;
+}
+
+/* CONTAINER */
+
+.container{
+    padding:20px;
+}
+
+/* TABELA */
+
+.table-container{
+    background:white;
+    border-radius:12px;
+    overflow:auto;
+    box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+
+table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:1300px;
+}
+
+th{
+    background:#111827;
+    color:white;
+    padding:12px;
+    text-align:center;
+    position:sticky;
+    top:0;
+}
+
+td{
+    border:1px solid #d1d5db;
+    padding:10px;
+    min-width:120px;
+    text-align:center;
+}
+
+td[contenteditable="true"]{
+    background:#fff;
+}
+
+td:focus{
+    outline:2px solid #2563eb;
+    background:#eff6ff;
+}
+
+.total{
+    background:#f3f4f6;
+    font-weight:bold;
+}
+
+/* LINHAS */
+
+table tbody tr:nth-child(even){
+    background:#f9fafb;
+}
+
+table tbody tr:hover{
+    background:#eef2ff;
+}
+
+/* DASHBOARD */
+
+.dashboard{
+    margin-top:30px;
+    display:none;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+.card{
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+
+.card h2{
+    margin-bottom:15px;
+    color:#111827;
+}
+
+/* INFO BOXES */
+
+.info-boxes{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    margin-bottom:20px;
+}
+
+.info{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+
+.info h3{
+    color:#6b7280;
+    margin-bottom:10px;
+}
+
+.info p{
+    font-size:28px;
+    font-weight:bold;
+    color:#111827;
+}
+
+/* RESPONSIVO */
+
+@media(max-width:900px){
+
+    .dashboard{
+        grid-template-columns:1fr;
+    }
+
+    .info-boxes{
+        grid-template-columns:1fr;
+    }
+
+    header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+    <h1>
+        <i class="fa-solid fa-table"></i>
+        SPP - Sistema Planilha Profissional.EVOPRO
+    </h1>
+
+    <div class="toolbar">
+
+        <button class="btn-save" onclick="salvarDados()">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Salvar
+        </button>
+
+        <button class="btn-secondary" onclick="document.getElementById('excelFile').click()">
+            <i class="fa-solid fa-file-import"></i>
+            Importar Excel
+        </button>
+
+        <button class="btn-save" onclick="enviarRelatorioWhatsApp()">
+            <i class="fa-brands fa-whatsapp"></i>
+            Enviar WhatsApp
+        </button>
+
+        <button class="btn-dashboard" onclick="gerarDashboard()">
+            <i class="fa-solid fa-chart-column"></i>
+            Dashboard
+        </button>
+
+        <button class="btn-danger" onclick="excluirTodasLinhas()">
+            <i class="fa-solid fa-trash"></i>
+            Excluir Todas
+        </button>
+
+        <button class="btn-export" onclick="exportarExcel()">
+            <i class="fa-solid fa-file-excel"></i>
+            Exportar Excel
+        </button>
+
+    </div>
+    <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none" onchange="importarExcel(event)" />
+
+</header>
+
+<div class="container">
+
+    <div class="table-container">
+
+        <table id="planilha">
+
+            <thead>
+
+                <tr>
+                    <th>Produto</th>
+                    <th>Categoria</th>
+                    <th>Quantidade</th>
+                    <th>Valor Unitário</th>
+                    <th>Total</th>
+                    <th>Ações</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <tr>
+
+                    <td contenteditable="true"></td>
+
+                    <td>
+                        <input list="categorias" class="categoria" placeholder="Selecione..." />
+                    </td>
+
+                    <td contenteditable="true" class="qtd">0</td>
+
+                    <td contenteditable="true" class="valor">0</td>
+
+                    <td class="total">R$ 0,00</td>
+
+                    <td>
+                        <button class="btn-delete"
+                        onclick="removerLinha(this)">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <datalist id="categorias">
+        <option value="Eletrônicos"></option>
+        <option value="Alimentos"></option>
+        <option value="Roupas"></option>
+        <option value="Serviços"></option>
+        <option value="Outros"></option>
+    </datalist>
+
+    <br>
+
+    <button onclick="adicionarLinha()" class="btn-save">
+
+        <i class="fa-solid fa-plus"></i>
+        Nova Linha
+
+    </button>
+
+    <!-- DASHBOARD -->
+
+    <div id="dashboardArea" style="display:none;">
+
+        <br><br>
+
+        <div class="info-boxes">
+
+            <div class="info">
+                <h3>Total Geral</h3>
+                <p id="totalGeral">R$ 0</p>
+            </div>
+
+            <div class="info">
+                <h3>Total Produtos</h3>
+                <p id="totalProdutos">0</p>
+            </div>
+
+            <div class="info">
+                <h3>Média de Venda</h3>
+                <p id="mediaVenda">R$ 0</p>
+            </div>
+
+        </div>
+
+        <div class="dashboard">
+
+            <div class="card">
+
+                <h2>Vendas por Produto</h2>
+
+                <canvas id="graficoProdutos"></canvas>
+
+            </div>
+
+            <div class="card">
+
+                <h2>Distribuição Financeira</h2>
+
+                <canvas id="graficoFinanceiro"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* FORMATAR MOEDA */
+
+function formatarMoeda(valor){
+
+    return valor.toLocaleString("pt-BR", {
+        style:"currency",
+        currency:"BRL"
+    });
+
+}
+
+/* ATUALIZAR TOTAIS */
+
+function atualizarTotais(){
+
+    const linhas =
+    document.querySelectorAll("#planilha tbody tr");
+
+    linhas.forEach(linha => {
+
+        const qtd = parseFloat(
+            linha.querySelector(".qtd")
+            .innerText.replace(",", ".")
+        ) || 0;
+
+        const valor = parseFloat(
+            linha.querySelector(".valor")
+            .innerText.replace(",", ".")
+        ) || 0;
+
+        const total = qtd * valor;
+
+        linha.querySelector(".total").innerText =
+        formatarMoeda(total);
+
+    });
+
+}
+
+/* AUTO UPDATE */
+
+document.addEventListener("input", () => {
+
+    atualizarTotais();
+
+    salvarDadosAutomatico();
+
+});
+
+/* NOVA LINHA */
+
+function criarLinha(produto = '', categoria = '', quantidade = '0', valor = '0'){
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+
+        <td contenteditable="true">${produto}</td>
+
+        <td>
+            <input list="categorias" class="categoria" placeholder="Selecione..." value="${categoria}" />
+        </td>
+
+        <td contenteditable="true" class="qtd">${quantidade}</td>
+
+        <td contenteditable="true" class="valor">${valor}</td>
+
+        <td class="total">R$ 0,00</td>
+
+        <td>
+            <button class="btn-delete"
+            onclick="removerLinha(this)">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </td>
+
+    `;
+
+    return tr;
+
+}
+
+function adicionarLinha(){
+
+    const tbody =
+    document.querySelector("#planilha tbody");
+
+    tbody.appendChild(criarLinha());
+
+}
+
+/* REMOVER LINHA */
+
+function removerLinha(botao){
+
+    botao.closest("tr").remove();
+
+    atualizarTotais();
+
+    salvarDadosAutomatico();
+
+}
+
+/* SALVAR */
+
+function salvarDados(){
+
+    const linhas = document.querySelectorAll("#planilha tbody tr");
+    const dados = Array.from(linhas).map(linha => ({
+        produto: linha.cells[0].innerText.trim(),
+        categoria: linha.querySelector('.categoria')?.value.trim() || linha.cells[1].innerText.trim(),
+        quantidade: linha.querySelector('.qtd').innerText.trim(),
+        valor: linha.querySelector('.valor').innerText.trim()
+    }));
+
+    localStorage.setItem("planilhaDados", JSON.stringify(dados));
+
+    alert("Dados salvos com sucesso!");
+
+}
+
+/* AUTO SAVE */
+
+function salvarDadosAutomatico(){
+
+    const linhas = document.querySelectorAll("#planilha tbody tr");
+    const dados = Array.from(linhas).map(linha => ({
+        produto: linha.cells[0].innerText.trim(),
+        categoria: linha.querySelector('.categoria')?.value.trim() || linha.cells[1].innerText.trim(),
+        quantidade: linha.querySelector('.qtd').innerText.trim(),
+        valor: linha.querySelector('.valor').innerText.trim()
+    }));
+
+    localStorage.setItem("planilhaDados", JSON.stringify(dados));
+
+}
+
+/* CARREGAR */
+
+function carregarDados(){
+
+    const dados =
+    localStorage.getItem("planilhaDados");
+
+    if(dados){
+
+        const tabela = JSON.parse(dados);
+        const tbody = document.querySelector("#planilha tbody");
+        tbody.innerHTML = '';
+        tabela.forEach(item => tbody.appendChild(criarLinha(item.produto, item.categoria, item.quantidade, item.valor)));
+
+    }
+
+    atualizarTotais();
+
+}
+
+function excluirTodasLinhas(){
+    const senha = prompt("Digite a senha para excluir todas as linhas:");
+    if(senha !== "123"){
+        alert("Senha incorreta.");
+        return;
+    }
+    const tbody = document.querySelector("#planilha tbody");
+    tbody.innerHTML = '';
+    tbody.appendChild(criarLinha());
+    atualizarTotais();
+    salvarDadosAutomatico();
+}
+
+function importarExcel(event){
+    const file = event.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e){
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        const tbody = document.querySelector("#planilha tbody");
+        tbody.innerHTML = '';
+
+        json.forEach(row => {
+            const produto = row.Produto || row.produto || '';
+            const categoria = row.Categoria || row.categoria || '';
+            const quantidade = row.Quantidade || row.quantidade || '0';
+            const valor = row.Valor || row.valor || '0';
+            tbody.appendChild(criarLinha(produto, categoria, quantidade, valor));
+        });
+
+        if(json.length === 0){
+            tbody.appendChild(criarLinha());
+        }
+
+        atualizarTotais();
+        salvarDadosAutomatico();
+    };
+    reader.readAsArrayBuffer(file);
+    event.target.value = '';
+}
+
+function enviarRelatorioWhatsApp(){
+    atualizarTotais();
+    const linhas = document.querySelectorAll("#planilha tbody tr");
+    let texto = 'Relatório de Vendas\n\n';
+
+    linhas.forEach((linha, index) => {
+        const produto = linha.cells[0].innerText.trim();
+        const categoria = linha.querySelector('.categoria')?.value.trim() || linha.cells[1].innerText.trim();
+        const quantidade = linha.querySelector('.qtd').innerText.trim();
+        const valor = linha.querySelector('.valor').innerText.trim();
+        const total = linha.querySelector('.total').innerText.trim();
+        texto += `${index + 1}. ${produto} | ${categoria} | Qtd: ${quantidade} | Valor: ${valor} | Total: ${total}\n`;
+    });
+
+    const soma = Array.from(linhas).reduce((acc, linha) => {
+        const total = parseFloat(
+            linha.querySelector('.total').innerText
+            .replace('R$', '')
+            .replace(/\./g, '')
+            .replace(',', '.')
+        ) || 0;
+        return acc + total;
+    }, 0);
+
+    texto += `\nTotal Geral: R$ ${soma.toLocaleString('pt-BR')}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
+}
+
+/* EXCEL */
+
+function exportarExcel(){
+    const linhas = document.querySelectorAll("#planilha tbody tr");
+    const dados = Array.from(linhas).map(linha => ({
+        Produto: linha.cells[0].innerText.trim(),
+        Categoria: linha.querySelector('.categoria')?.value.trim() || linha.cells[1].innerText.trim(),
+        Quantidade: linha.querySelector('.qtd').innerText.trim(),
+        Valor: linha.querySelector('.valor').innerText.trim(),
+        Total: linha.querySelector('.total').innerText.trim()
+    }));
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Planilha");
+    XLSX.writeFile(wb, "planilha.xlsx");
+}
+
+/* CHARTS */
+
+let grafico1;
+let grafico2;
+
+/* DASHBOARD */
+
+function gerarDashboard(){
+
+    atualizarTotais();
+
+    document.getElementById("dashboardArea")
+    .style.display = "block";
+
+    document.querySelector(".dashboard")
+    .style.display = "grid";
+
+    const linhas =
+    document.querySelectorAll("#planilha tbody tr");
+
+    let labels = [];
+    let valores = [];
+
+    let soma = 0;
+
+    linhas.forEach(linha => {
+
+        const produto =
+        linha.cells[0].innerText.trim();
+
+        const totalTexto =
+        linha.querySelector(".total").innerText;
+
+        const total = parseFloat(
+            totalTexto
+            .replace("R$", "")
+            .replace(/\./g, "")
+            .replace(",", ".")
+        ) || 0;
+
+        if(produto !== ""){
+
+            labels.push(produto);
+
+            valores.push(total);
+
+        }
+
+        soma += total;
+
+    });
+
+    /* KPIs */
+
+    document.getElementById("totalGeral").innerText =
+    formatarMoeda(soma);
+
+    document.getElementById("totalProdutos").innerText =
+    linhas.length;
+
+    const media =
+    linhas.length ? soma / linhas.length : 0;
+
+    document.getElementById("mediaVenda").innerText =
+    formatarMoeda(media);
+
+    /* DESTRUIR GRÁFICOS */
+
+    if(grafico1){
+        grafico1.destroy();
+    }
+
+    if(grafico2){
+        grafico2.destroy();
+    }
+
+    /* CORES */
+
+    const cores = [
+        '#2563eb',
+        '#16a34a',
+        '#f59e0b',
+        '#dc2626',
+        '#7c3aed',
+        '#0ea5e9',
+        '#14b8a6',
+        '#f97316'
+    ];
+
+    /* GRÁFICO BARRAS */
+
+    const ctx1 =
+    document.getElementById("graficoProdutos");
+
+    grafico1 = new Chart(ctx1, {
+
+        type:'bar',
+
+        data:{
+
+            labels:labels,
+
+            datasets:[{
+
+                label:'Valor Total',
+
+                data:valores,
+
+                backgroundColor:cores,
+
+                borderWidth:1
+
+            }]
+
+        },
+
+        options:{
+            responsive:true
+        }
+
+    });
+
+    /* GRÁFICO PIZZA */
+
+    const ctx2 =
+    document.getElementById("graficoFinanceiro");
+
+    grafico2 = new Chart(ctx2, {
+
+        type:'pie',
+
+        data:{
+
+            labels:labels,
+
+            datasets:[{
+
+                data:valores,
+
+                backgroundColor:cores
+
+            }]
+
+        },
+
+        options:{
+            responsive:true
+        }
+
+    });
+
+}
+
+/* INICIAR */
+
+carregarDados();
+
+</script>
+
+</body>
+</html>
